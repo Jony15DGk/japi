@@ -45,7 +45,7 @@ module.exports = (connection) => {
 
                 const [result] = await connection.promise().query(
                     'INSERT INTO permiso ( nombre,  idcreador, idactualizacion, fechacreacion, fechaactualizacion, eliminado) VALUES (?, ?, ?, ?, ?, ?)',
-                    [nombre, idcreador, new Date(), null, null, 0]
+                    [nombre, idcreador, null, new Date(), null, 0]
                 );
 
                 res.status(201).json({ message: 'Permiso registrada', promId: result.insertId });
