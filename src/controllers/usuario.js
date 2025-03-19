@@ -172,7 +172,7 @@ module.exports = (connection) => {
         const accessToken = jwt.sign(
           { idusuario: user.idusuario, email: user.email, rol_idrol: user.rol_idrol, nombrecliente: user.nombrecliente, rol: user.nombre },
           process.env.ACCESS_TOKEN_SECRET,
-          { expiresIn: '15m' }
+          { expiresIn: '2m' }
         );
         
         const refreshToken = jwt.sign(
@@ -211,6 +211,25 @@ module.exports = (connection) => {
       const { id } = req.params;
 
       try {
+        const [rows] = await connection.promise().query(
+          'SELECT rol_idrol FROM usuario WHERE idusuario = ?',
+          [id]
+        );
+    
+        if (rows.length === 0) {
+          return res.status(404).json({ message: 'Usuario no encontrado' });
+        }
+    
+        const { rol_idrol } = rows[0];
+    
+        
+        const [roles] = await connection.promise().query(
+          'SELECT idrol FROM rol WHERE nombre = "Superusuario"'
+        );
+    
+        if (roles.length > 0 && rol_idrol === roles[0].idrol) {
+          return res.status(403).json({ message: 'No puedes eliminar un superusuario' });
+        }
         const [result] = await connection.promise().query(
           'UPDATE usuario SET eliminado = ? WHERE idusuario = ?',
           [true, id]
@@ -287,25 +306,7 @@ module.exports = (connection) => {
           res.status(500).json({ message: 'Error en el servidor' });
       }
   },superusuario: async (req, res) => {
-      const { rol_idrol, email, contraseña, idcreador } = req.body;
-
-      try {
-
-        const hashedPasswordBinary = Buffer.from(contraseña, 'utf8');
-
-        const [result] = await connection.promise().query(
-          'INSERT INTO usuario (rol_idrol, email, contraseña, fechacreacion, fechaactualizacion, idcreador, idactualizacion, eliminado) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-          [rol_idrol, email, hashedPasswordBinary, new Date(), null, idcreador, null, 0]
-        );
-
-        res.status(201).json({ message: 'Usuario registrado', userId: result.insertId });
-      } catch (error) {
-        console.error('Error al registrar usuario:', error);
-        res.status(500).json({ message: 'Error al registrar usuario' });
-      }
-    },
-     eliminarsuperusuario: async (req, res)=>{
-      const { rol_idrol, email, contraseña, idcreador } = req.body;
+    const { email, contraseña, idcreador } = req.body;
 
     try {
         
@@ -321,6 +322,7 @@ module.exports = (connection) => {
         const rol_idrol = roles[0].idrol;
         const hashedPasswordBinary = Buffer.from(contraseña, 'utf8');
 
+        
         const [result] = await connection.promise().query(
             'INSERT INTO usuario (rol_idrol, email, contraseña, fechacreacion, fechaactualizacion, idcreador, idactualizacion, eliminado) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
             [rol_idrol, email, hashedPasswordBinary, new Date(), null, idcreador, null, 0]
@@ -330,6 +332,24 @@ module.exports = (connection) => {
     } catch (error) {
         console.error('Error al registrar usuario:', error);
         res.status(500).json({ message: 'Error al registrar usuario' });
+    }
+    },
+     eliminarsuperusuario: async (req, res)=>{
+      const { id } = req.params;
+      try {
+        const [result] = await connection.promise().query(
+          'UPDATE usuario SET eliminado = ? WHERE idusuario = ?',
+          [true, id]
+        );
+
+        if (result.affectedRows === 0) {
+          return res.status(404).json({ message: 'Empresa no encontrado' });
+        }
+
+        res.status(200).json({ message: 'Empresa eliminada ' });
+      } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ message: 'Error' });
       }
       
     }

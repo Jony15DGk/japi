@@ -30,7 +30,7 @@ module.exports = (connection) => {
       }
     },
     empresa: async (req, res) => {
-      const { usuario_idusuario, nombre, descripcion, ubicacion } = req.body;
+      const { usuario_idusuario,matriz_idmatriz, nombre, descripcion, ubicacion } = req.body;
 
       try {
         const [usuarioResult] = await connection.promise().query(
@@ -40,6 +40,15 @@ module.exports = (connection) => {
 
         if (usuarioResult.length === 0) {
           return res.status(400).json({ message: 'El usuario especificado no existe' });
+        }
+
+        const [matrizResult] = await connection.promise().query(
+          'SELECT idmatriz FROM matriz WHERE idmatriz = ?',
+          [matriz_idmatriz]
+        );
+
+        if (matrizResult.length === 0) {
+          return res.status(400).json({ message: 'La matriz especificada no existe' });
         }
 
         const { lat, lng } = ubicacion;
