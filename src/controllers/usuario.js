@@ -172,7 +172,7 @@ module.exports = (connection) => {
         const accessToken = jwt.sign(
           { idusuario: user.idusuario, email: user.email, rol_idrol: user.rol_idrol, nombrecliente: user.nombrecliente, rol: user.nombre },
           process.env.ACCESS_TOKEN_SECRET,
-          { expiresIn: '2m' }
+          { expiresIn: '15m' }
         );
         
         const refreshToken = jwt.sign(

@@ -17,6 +17,8 @@ const moduloRoutes = require('./src/routes/modulo');
 const movimientoRoutes = require('./src/routes/movimiento');
 const tarjetaRoutes = require('./src/routes/tarjeta');
 const listadecategoriaRoutes = require('./src/routes/listadecategoria');
+const imagen = require('./src/routes/imagen');
+
 const app = express();
 const port = process.env.PORT || 8080;
 const cors = require('cors');
@@ -62,6 +64,7 @@ app.use('/api', moduloRoutes(pool));
 app.use('/api', movimientoRoutes(pool));
 app.use('/api', tarjetaRoutes(pool));
 app.use('/api', listadecategoriaRoutes(pool));
+app.use('/api', imagen(pool));
 
 app.listen(port, () => {
   console.log(`Servidor ejecutándose en el puerto: ${port}`);
