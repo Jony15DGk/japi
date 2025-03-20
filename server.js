@@ -18,7 +18,7 @@ const movimientoRoutes = require('./src/routes/movimiento');
 const tarjetaRoutes = require('./src/routes/tarjeta');
 const listadecategoriaRoutes = require('./src/routes/listadecategoria');
 const multer = require('multer');
-const upload = multer({ dest: './src/uploads/' });
+const upload = multer({ dest: path.join(__dirname, 'src', 'uploads') });
 const app = express();
 const port = process.env.PORT || 8080;
 const cors = require('cors');
@@ -83,7 +83,7 @@ app.post('/api/upload', upload.single('promocionFile'), (req, res) => {
 });
 
 function saveImage(file) {
-  const newPath = path.join(__dirname, 'uploads', file.originalname);
+  const newPath = path.join(__dirname, 'src', 'uploads', file.originalname);
   fs.renameSync(file.path, newPath);
   return newPath;
 }
