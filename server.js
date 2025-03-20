@@ -66,7 +66,7 @@ app.use('/api', movimientoRoutes(pool));
 app.use('/api', tarjetaRoutes(pool));
 app.use('/api', listadecategoriaRoutes(pool));
 
-app.post('api/upload', upload.single('promocionFile'), (req, res) => {
+app.post('/api/upload', upload.single('promocionFile'), (req, res) => {
   console.log(req.file);
   res.send('Termina');
 });
