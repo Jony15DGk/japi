@@ -23,6 +23,7 @@ const upload = multer({ dest: 'uploads/' })
 const app = express();
 const port = process.env.PORT || 8080;
 const cors = require('cors');
+const fs = require('node:fs');
 
 app.use(bodyParser.json());
 
@@ -68,8 +69,15 @@ app.use('/api', listadecategoriaRoutes(pool));
 
 app.post('/api/upload', upload.single('promocionFile'), (req, res) => {
   console.log(req.file);
+  saveImage(req.file);
   res.send('Termina');
 });
+
+function saveImage(file){
+  const newPath = `./uploads/${file.originalname}`;
+  fs.renameSync(file.path, newPath);
+  return newPath;
+}
 app.listen(port, () => {
   console.log(`Servidor ejecutándose en el puerto: ${port}`);
 });
