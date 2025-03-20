@@ -69,11 +69,23 @@ app.use('/api', movimientoRoutes(pool));
 app.use('/api', tarjetaRoutes(pool));
 app.use('/api', listadecategoriaRoutes(pool));
 
-app.post('/api/upload', upload.single('promocionFile'), (req, res) => {
+const ensureUploadsFolderExists = (req, res, next) => {
+  const uploadsPath = path.join(__dirname, 'src', 'uploads');
+
+  if (!fs.existsSync(uploadsPath)) {
+    fs.mkdirSync(uploadsPath, { recursive: true }); // Crea la carpeta si no existe
+  }
+
+  next();
+};
+
+app.post('/api/upload', ensureUploadsFolderExists, upload.single('promocionFile'), (req, res) => {
   if (!req.file) {
     return res.status(400).send('No se subió ningún archivo.');
   }
+
   console.log(req.file);
+
   try {
     const newPath = saveImage(req.file);
     res.send(`Archivo subido y guardado en: ${newPath}`);
@@ -84,8 +96,12 @@ app.post('/api/upload', upload.single('promocionFile'), (req, res) => {
 });
 
 function saveImage(file) {
+  // Construye la ruta absoluta de destino
   const newPath = path.join(__dirname, 'src', 'uploads', file.originalname);
+
+  // Mueve el archivo a la nueva ubicación
   fs.renameSync(file.path, newPath);
+
   return newPath;
 }
 
