@@ -18,12 +18,13 @@ const movimientoRoutes = require('./src/routes/movimiento');
 const tarjetaRoutes = require('./src/routes/tarjeta');
 const listadecategoriaRoutes = require('./src/routes/listadecategoria');
 const multer = require('multer');
+const path = require('path');
 const upload = multer({ dest: path.join(__dirname, 'src', 'uploads') });
 const app = express();
 const port = process.env.PORT || 8080;
 const cors = require('cors');
 const fs = require('fs');
-const path = require('path');
+
 
 app.use(bodyParser.json());
 
