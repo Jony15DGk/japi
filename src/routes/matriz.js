@@ -12,5 +12,5 @@ module.exports = (connection) => {
   router.patch('/matriz/:id', controller.actualizarMatriz);
   router.delete('/matriz/:id', controller.eliminarMatriz);
 
-  return router;
+ return router;
 };
