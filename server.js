@@ -17,13 +17,7 @@ const moduloRoutes = require('./src/routes/modulo');
 const movimientoRoutes = require('./src/routes/movimiento');
 const tarjetaRoutes = require('./src/routes/tarjeta');
 const listadecategoriaRoutes = require('./src/routes/listadecategoria');
-<<<<<<< HEAD
-const multer = require('multer');
-const path = require('path');
-const upload = multer({ dest: path.join(__dirname, 'src', 'uploads') });
-=======
 const matrizRoutes = require('./src/routes/matriz');
->>>>>>> fanny
 const app = express();
 const port = process.env.PORT || 8080;
 const cors = require('cors');
