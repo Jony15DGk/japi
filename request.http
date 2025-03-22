@@ -1,0 +1,37 @@
+REQUEST MATRIZ
+//peticiones http para matriz
+### Consultar matrices
+GET http://localhost:3000/api/matriz
+Content-Type: application/json
+
+
+### Consultar matriz por ID
+GET http://localhost:3000/api/matriz/1
+Content-Type: application/json
+
+### Crear una nueva matriz
+POST http://localhost:3000/api/matriz
+Content-Type: application/json
+
+{
+  "nombre": "Matriz Prueba 2",
+  "ubicacion": { "lat": 19.432608, "lng": -99.133209 },
+  "telefono": "123456789",
+  "email": "holaholahola@gmail.com"
+}
+
+### Actualizar un matriz por ID
+PATCH http://localhost:3000/api/matriz/1
+Content-Type: application/json
+
+{
+  "idmatriz": 1,
+  "nombre": "Matriz Actualizada",
+  "ubicacion": { "lat": 19.432608, "lng": -99.133209 },
+  "telefono": "123456789",
+  "email": "hola@gmail.com"
+}
+
+### Eliminar un matriz por ID
+DELETE http://localhost:3000/api/matriz/2
+Content-Type: application/json
