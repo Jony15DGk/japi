@@ -40,8 +40,9 @@ module.exports = (connection) => {
     
             
             const [result] = await connection.promise().query(
-                'INSERT INTO matriz (idmatriz, nombre, ubicacion, telefono, email, eliminado ) VALUES (?, ?, ST_GeomFromText(?), ?, ?, ?)',
-                [idmatriz, nombre, pointWKT, telefono, email, 0]);
+              'INSERT INTO empresa (usuario_idusuario, matriz_idmatriz, nombre, descripcion, ubicacion, eliminado) VALUES (?, ?, ?, ?, ST_GeomFromText(?), ?)',
+              [usuario_idusuario, matriz_idmatriz, nombre, descripcion, pointWKT, 0]
+          );
     
             res.status(201).json({ message: 'Matriz registrada', idmatriz: result.insertId });
         } catch (error) {
