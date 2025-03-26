@@ -30,7 +30,7 @@ module.exports = (connection) => {
       },
 
       crearmatriz: async (req, res) => {
-        const { idmatriz, nombre, ubicacion, telefono, email } = req.body;
+        const {usuario_idusuario, matriz_idmatriz, nombre, ubicacion, telefono, email } = req.body;
     
         try {
 
@@ -38,9 +38,9 @@ module.exports = (connection) => {
             const { lat, lng } = ubicacion;      
             const pointWKT = `POINT(${lng} ${lat})`;
     
-            
+      
             const [result] = await connection.promise().query(
-              'INSERT INTO empresa (usuario_idusuario, matriz_idmatriz, nombre, descripcion, ubicacion, eliminado) VALUES (?, ?, ?, ?, ST_GeomFromText(?), ?)',
+              'INSERT INTO matriz (usuario_idusuario, matriz_idmatriz, nombre, descripcion, ubicacion, eliminado) VALUES (?, ?, ?, ?, ST_GeomFromText(?), ?)',
               [usuario_idusuario, matriz_idmatriz, nombre, descripcion, pointWKT, 0]
           );
     

@@ -56,8 +56,8 @@ module.exports = (connection) => {
         const pointWKT = `POINT(${lng} ${lat})`;
 
         const [result] = await connection.promise().query(
-          'INSERT INTO empresa (usuario_idusuario, nombre, descripcion, ubicacion, eliminado) VALUES (?, ?, ?, ST_GeomFromText(?), ?)',
-          [usuario_idusuario, nombre, descripcion, pointWKT, 0]
+          'INSERT INTO empresa (usuario_idusuario, matriz_idmatriz, nombre, descripcion, ubicacion, eliminado) VALUES (?, ?, ?, ?, ST_GeomFromText(?), ?)',
+          [usuario_idusuario,matriz_idmatriz, nombre, descripcion, pointWKT, 0]
         );
 
         res.status(201).json({ message: 'Empresa registrada', rolId: result.insertId });
