@@ -5,9 +5,9 @@ const upload = require("../middleware/multer");
 const router = express.Router();
 
 module.exports = (connection) => {
-  const controller = uploadController(connection); // ✅ Ahora sí es una función válida
+  const controller = uploadController(connection);
 
-  router.post('/', upload.single('image'), controller); // ✅ Añadimos `upload.single('image')`
+  router.post('/upload', upload.single('image'), controller); 
 
   return router;
 };
