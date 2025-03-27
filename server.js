@@ -18,6 +18,7 @@ const movimientoRoutes = require('./src/routes/movimiento');
 const tarjetaRoutes = require('./src/routes/tarjeta');
 const listadecategoriaRoutes = require('./src/routes/listadecategoria');
 const matrizRoutes = require('./src/routes/matriz');
+const uploadRoutes = require('./src/routes/upload');
 const app = express();
 const port = process.env.PORT || 8080;
 const cors = require('cors');
@@ -67,34 +68,8 @@ app.use('/api', movimientoRoutes(pool));
 app.use('/api', tarjetaRoutes(pool));
 app.use('/api', listadecategoriaRoutes(pool));
 app.use('/api', matrizRoutes(pool));
+app.use('/api', uploadRoutes(pool));
 
-/*
-app.post('/api/upload', upload.single('promocionFile'), (req, res) => {
-  if (!req.file) {
-    return res.status(400).send('No se subió ningún archivo.');
-  }
-
-  console.log(req.file);
-
-  try {
-    const newPath = saveImage(req.file);
-    res.send(`Archivo subido y guardado en: ${newPath}`);
-  } catch (error) {
-    console.error('Error al guardar la imagen:', error);
-    res.status(500).send('Error al guardar la imagen.');
-  }
-});
-
-function saveImage(file) {
-  
-  const newPath = path.join(__dirname, 'src', 'uploads', file.originalname);
-
-  
-  fs.renameSync(file.path, newPath);
-
-  return newPath;
-}
-*/
 
 app.listen(port, () => {
   console.log(`Servidor ejecutándose en el puerto: ${port}`);
