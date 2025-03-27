@@ -1,4 +1,4 @@
-const cloudinary = require("../middleware/multer");
+const cloudinary = require("../utils/cloudinary");
 const upload = require("../middleware/multer");
 
 module.exports = (connection) => {
