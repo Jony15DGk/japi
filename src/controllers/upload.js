@@ -4,6 +4,8 @@ const upload = require("../middleware/multer");
 module.exports = (connection) => {
   return async (req, res) => {
     try {
+    
+
       console.log("Archivo recibido:", req.file); // 🔍 Verificar contenido del archivo
 
       if (!req.file) {
@@ -13,7 +15,13 @@ module.exports = (connection) => {
         });
       }
 
-      const result = await cloudinary.uploader.upload(req.file.path);
+      const result = await cloudinary.uploader.upload_stream((error, result) => {
+        if (error) {
+          throw new Error(error);
+        }
+        return result;
+      }).end(req.file.buffer);
+      
 
       res.status(200).json({
         success: true,
