@@ -33,7 +33,7 @@ module.exports = (connection) => {
       res.status(500).json({
         success: false,
         message: "Error",
-        error: err.message // Agregar mensaje de error
+        message: err.message || "Error en la subida"
       });
     }
   };
