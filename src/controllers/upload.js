@@ -1,39 +1,41 @@
 const cloudinary = require("../utils/cloudinary");
-const upload = require("../middleware/multer");
 
 module.exports = (connection) => {
   return async (req, res) => {
     try {
-    
-
-      console.log("Archivo recibido:", req.file); // 🔍 Verificar contenido del archivo
-
       if (!req.file) {
         return res.status(400).json({
           success: false,
-          message: "No se ha recibido ningún archivo",
+          message: "No se recibió ningún archivo"
         });
       }
 
-      const result = await cloudinary.uploader.upload_stream((error, result) => {
-        if (error) {
-          throw new Error(error);
-        }
-        return result;
-      }).end(req.file.buffer);
-      
+      const uploadStream = cloudinary.uploader.upload_stream(
+        { resource_type: "auto" },
+        (error, result) => {
+          if (error) {
+            console.error("Error en la subida:", error);
+            return res.status(500).json({
+              success: false,
+              message: error.message || "Error en la subida"
+            });
+          }
 
-      res.status(200).json({
-        success: true,
-        message: "Uploaded!",
-        data: result
-      });
+          res.status(200).json({
+            success: true,
+            message: "Uploaded!",
+            data: result
+          });
+        }
+      );
+
+      uploadStream.end(req.file.buffer);
+      
     } catch (err) {
-      console.error("Error en la subida:", err); // 🔴 Imprimir el error detallado
+      console.error("Error inesperado:", err);
       res.status(500).json({
         success: false,
-        message: "Error",
-        message: err.message || "Error en la subida"
+        message: err.message || "Error inesperado"
       });
     }
   };
