@@ -10,6 +10,17 @@ module.exports = (connection) => {
         });
       }
 
+      // Validar tipos de archivo
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+      const invalidFiles = req.files.filter(file => !allowedTypes.includes(file.mimetype));
+      
+      if (invalidFiles.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Algunos archivos no son imágenes válidas"
+        });
+      }
+
       const uploadPromises = req.files.map((file) => {
         return new Promise((resolve, reject) => {
           const uploadStream = cloudinary.uploader.upload_stream(
