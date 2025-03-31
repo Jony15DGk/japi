@@ -30,7 +30,7 @@ module.exports = (connection) => {
       },
 
       crearmatriz: async (req, res) => {
-        const {usuario_idusuario, matriz_idmatriz, nombre, ubicacion, telefono, email } = req.body;
+        const {nombre, ubicacion, telefono, email } = req.body;
     
         try {
 
@@ -40,8 +40,8 @@ module.exports = (connection) => {
     
       
             const [result] = await connection.promise().query(
-              'INSERT INTO matriz (usuario_idusuario, matriz_idmatriz, nombre, descripcion, ubicacion, eliminado) VALUES (?, ?, ?, ?, ST_GeomFromText(?), ?)',
-              [usuario_idusuario, matriz_idmatriz, nombre, descripcion, pointWKT, 0]
+              'INSERT INTO matriz (nombre, ubicacion, telefono, email) VALUES (?, ?, ?, ?, ST_GeomFromText(?), ?)',
+              [ nombre, ubicacion, telefono, email, pointWKT, 0]
           );
     
             res.status(201).json({ message: 'Matriz registrada', idmatriz: result.insertId });

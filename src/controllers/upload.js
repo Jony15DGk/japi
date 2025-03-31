@@ -10,7 +10,7 @@ module.exports = (connection) => {
         });
       }
 
-      // Validar tipos de archivo
+      
       const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
       const invalidFiles = req.files.filter(file => !allowedTypes.includes(file.mimetype));
       

@@ -7,10 +7,10 @@ module.exports = (connection) => {
   const controller = categoriaController(connection);
 
   router.post('/categoria', controller.categoria);
-  router.get('/categoria',authenticateToken(['Administrador']), controller.consultar);
+  router.get('/categoria',controller.consultar);
   router.get('/categoria/:id', controller.consultarId);
   router.patch('/categoria/:id', controller.actualizarCategoria);
-  router.delete('/categoria/:id', authenticateToken(['Administrador']),controller.eliminarCategoria);
+  router.delete('/categoria/:id', controller.eliminarCategoria);
 
   return router;
 };
