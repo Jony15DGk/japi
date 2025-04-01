@@ -3,7 +3,7 @@ const cloudinary = require("../utils/cloudinary");
 module.exports = (connection) => {
   return async (req, res) => {
     try {
-      const { promocion_id } = req.body; // Se espera recibir el ID de la promoción en el body
+      const { promocion_id } = req.body; 
 
       if (!promocion_id) {
         return res.status(400).json({
@@ -47,7 +47,7 @@ module.exports = (connection) => {
 
       const results = await Promise.all(uploadPromises);
 
-      // Insertar las imágenes en la base de datos
+     
       const insertPromises = results.map((image) => {
         return new Promise((resolve, reject) => {
           connection.query(

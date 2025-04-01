@@ -8,6 +8,17 @@ module.exports = (connection) => {
 
       try {
 
+        const [emailResult] = await connection.promise().query(
+          'select * from usuario where email  = ?',
+          [email]
+        );
+
+        if (emailResult.length > 0) {
+          return res.status(400).json({ message: 'El correo electrónico ya está usado por otro usuario' });
+        }
+
+  //
+
         const [rolResult] = await connection.promise().query(
           'SELECT nombre FROM rol WHERE idrol = ?',
           [rol_idrol]
@@ -35,6 +46,8 @@ module.exports = (connection) => {
         if (nombreRol === 'Superusuario' && nombreRolCreador !== 'Superusuario') {
           return res.status(403).json({ message: 'Solo los superusuarios pueden crear Superusuarios' });
         }
+
+
 
         const hashedPasswordBinary = Buffer.from(contraseña, 'utf8');
 
