@@ -1,3 +1,4 @@
+const cloudinary = require("../utils/cloudinary");
 module.exports = (connection) => {
     return {
         consultar: async (req, res) => {
@@ -30,34 +31,83 @@ module.exports = (connection) => {
         },
 
         promocion: async (req, res) => {
-            const { empresa_idempresa, categoria_idcategoria, nombre, descripcion, precio, vigenciainicio, vigenciafin, tipo } = req.body;
-
+            const {
+                empresa_idempresa,
+                categoria_idcategoria,
+                nombre,
+                descripcion,
+                precio,
+                vigenciainicio,
+                vigenciafin,
+                tipo,
+            } = req.body;
+        
             try {
+                // Valida existencia de empresa y categoría
                 const [empresaResult] = await connection.promise().query(
                     'SELECT idempresa FROM empresa WHERE idempresa = ?',
                     [empresa_idempresa]
                 );
-        
                 if (empresaResult.length === 0) {
                     return res.status(400).json({ message: 'La empresa especificada no existe' });
                 }
-
+        
                 const [categoriaResult] = await connection.promise().query(
                     'SELECT idcategoria FROM categoria WHERE idcategoria = ?',
                     [categoria_idcategoria]
                 );
-        
                 if (categoriaResult.length === 0) {
                     return res.status(400).json({ message: 'La categoría especificada no existe' });
                 }
-
-
+        
+                // Inserta la promoción
                 const [result] = await connection.promise().query(
                     'INSERT INTO promocion (empresa_idempresa, categoria_idcategoria, nombre, descripcion, precio, vigenciainicio, vigenciafin, tipo, eliminado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
                     [empresa_idempresa, categoria_idcategoria, nombre, descripcion, precio, vigenciainicio, vigenciafin, tipo, 0]
                 );
-
-                res.status(201).json({ message: 'Promoción registrada', promocionId: result.insertId });
+        
+                const promocionId = result.insertId;
+        
+                // Manejo de imágenes
+                if (req.files && req.files.length > 0) {
+                    const uploadPromises = req.files.map((file) => {
+                        return new Promise((resolve, reject) => {
+                            const uploadStream = cloudinary.uploader.upload_stream(
+                                { resource_type: "image" },
+                                (error, result) => {
+                                    if (error) {
+                                        reject(error);
+                                    } else {
+                                        resolve(result);
+                                    }
+                                }
+                            );
+                            uploadStream.end(file.buffer);
+                        });
+                    });
+        
+                    const imageResults = await Promise.all(uploadPromises);
+        
+                    const insertPromises = imageResults.map((image) => {
+                        return new Promise((resolve, reject) => {
+                            connection.query(
+                                "INSERT INTO imagen (url, public_id, promocion_idpromocion) VALUES (?, ?, ?)",
+                                [image.secure_url, image.public_id, promocionId],
+                                (err, result) => {
+                                    if (err) {
+                                        reject(err);
+                                    } else {
+                                        resolve(result);
+                                    }
+                                }
+                            );
+                        });
+                    });
+        
+                    await Promise.all(insertPromises);
+                }
+        
+                res.status(201).json({ message: 'Promoción registrada con imágenes', promocionId });
             } catch (error) {
                 console.error('Error al registrar promoción:', error);
                 res.status(500).json({ message: 'Error al registrar promoción' });

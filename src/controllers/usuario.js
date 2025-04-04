@@ -17,8 +17,7 @@ module.exports = (connection) => {
           return res.status(400).json({ message: 'El correo electrónico ya está usado por otro usuario' });
         }
 
-  //
-
+  
         const [rolResult] = await connection.promise().query(
           'SELECT nombre FROM rol WHERE idrol = ?',
           [rol_idrol]
