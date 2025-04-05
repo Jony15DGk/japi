@@ -1,13 +1,13 @@
 const express = require('express');
 const promocionController = require('../controllers/promocion');
-const upload = require('../middleware/multer'); // Middleware para manejo de archivos
+const upload = require('../middleware/multer'); 
 
 const router = express.Router();
 
 module.exports = (connection) => {
     const controller = promocionController(connection);
 
-    router.post('/promocion', upload.array('images', 4), controller.promocion); // Agrega soporte de imágenes
+    router.post('/promocion', upload.array('images', 4), controller.promocion);
     router.get('/promocion', controller.consultar);
     router.get('/promocion/:id', controller.consultarId);
     router.patch('/promocion/:id', controller.actualizarPromocion);

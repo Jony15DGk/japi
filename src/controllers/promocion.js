@@ -3,30 +3,101 @@ module.exports = (connection) => {
     return {
         consultar: async (req, res) => {
             try {
-
-                const [rows] = await connection.promise().query('SELECT * FROM promocion WHERE eliminado = ?', [0]);
-                res.status(200).json(rows);
+                
+                const [promociones] = await connection.promise().query(
+                    `SELECT 
+                        p.idpromocion,
+                        p.empresa_idempresa,
+                        p.categoria_idcategoria,
+                        p.nombre,
+                        p.descripcion,
+                        p.precio,
+                        p.vigenciainicio,
+                        p.vigenciafin,
+                        p.tipo
+                     FROM promocion p
+                     
+                     WHERE p.eliminado = 0`
+                );
+        
+               
+                if (promociones.length === 0) {
+                    return res.status(404).json({ message: 'No se encontraron promociones' });
+                }
+        
+                
+                const promocionesConImagenes = await Promise.all(
+                    promociones.map(async (promocion) => {
+                        const [imagenes] = await connection.promise().query(
+                            'SELECT idimagen, url, public_id FROM imagen WHERE promocion_idpromocion = ?',
+                            [promocion.idpromocion]
+                        );
+                        return {
+                            ...promocion,
+                            imagenes: imagenes.map(img => ({
+                                id: img.idimagen,
+                                url: img.url,
+                                public_id: img.public_id
+                            }))
+                        };
+                    })
+                );
+        
+                res.status(200).json(promocionesConImagenes);
             } catch (error) {
-                console.error('Error:', error);
-                res.status(500).json({ message: 'Error' });
+                console.error('Error al consultar promociones:', error);
+                res.status(500).json({ message: 'Error al consultar promociones' });
             }
         },
 
         consultarId: async (req, res) => {
             const { id } = req.params;
-
+        
             try {
-
-                const [rows] = await connection.promise().query('SELECT * FROM promocion WHERE idpromocion = ? AND eliminado = ?', [id, 0]);
-
-                if (rows.length === 0) {
+                
+                const [promociones] = await connection.promise().query(
+                    `SELECT 
+                        p.idpromocion,
+                        p.empresa_idempresa,
+                        p.categoria_idcategoria,
+                        p.nombre,
+                        p.descripcion,
+                        p.precio,
+                        p.vigenciainicio,
+                        p.vigenciafin,
+                        p.tipo
+                     FROM promocion p               
+                     WHERE p.idpromocion = ? AND p.eliminado = 0`,
+                    [id]
+                );
+        
+               
+                if (promociones.length === 0) {
                     return res.status(404).json({ message: 'Promoción no encontrada' });
                 }
-
-                res.status(200).json(rows[0]);
+        
+                const promocion = promociones[0];
+        
+                
+                const [imagenes] = await connection.promise().query(
+                    'SELECT idimagen, url, public_id FROM imagen WHERE promocion_idpromocion = ?',
+                    [id]
+                );
+        
+                
+                const respuesta = {
+                    ...promocion,
+                    imagenes: imagenes.map(img => ({
+                        id: img.idimagen,
+                        url: img.url,
+                        public_id: img.public_id
+                    }))
+                };
+        
+                res.status(200).json(respuesta);
             } catch (error) {
-                console.error('Error:', error);
-                res.status(500).json({ message: 'Error' });
+                console.error('Error al consultar promoción:', error);
+                res.status(500).json({ message: 'Error al consultar promoción' });
             }
         },
 
@@ -43,7 +114,7 @@ module.exports = (connection) => {
             } = req.body;
         
             try {
-                // Valida existencia de empresa y categoría
+                
                 const [empresaResult] = await connection.promise().query(
                     'SELECT idempresa FROM empresa WHERE idempresa = ?',
                     [empresa_idempresa]
@@ -60,7 +131,7 @@ module.exports = (connection) => {
                     return res.status(400).json({ message: 'La categoría especificada no existe' });
                 }
         
-                // Inserta la promoción
+              
                 const [result] = await connection.promise().query(
                     'INSERT INTO promocion (empresa_idempresa, categoria_idcategoria, nombre, descripcion, precio, vigenciainicio, vigenciafin, tipo, eliminado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
                     [empresa_idempresa, categoria_idcategoria, nombre, descripcion, precio, vigenciainicio, vigenciafin, tipo, 0]
@@ -68,7 +139,7 @@ module.exports = (connection) => {
         
                 const promocionId = result.insertId;
         
-                // Manejo de imágenes
+                
                 if (req.files && req.files.length > 0) {
                     const uploadPromises = req.files.map((file) => {
                         return new Promise((resolve, reject) => {
