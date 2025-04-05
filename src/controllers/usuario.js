@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 module.exports = (connection) => {
   return {
-    crearClienteConUsuario: async (req, res) => {
+    usuario: async (req, res) => {
       const {
         rol_idrol,
         email,
