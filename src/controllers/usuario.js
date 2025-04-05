@@ -3,64 +3,83 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 module.exports = (connection) => {
   return {
-    usuario: async (req, res) => {
-      const { rol_idrol, email, contraseña, idcreador } = req.body;
-
+    crearClienteConUsuario: async (req, res) => {
+      const {
+        rol_idrol,
+        email,
+        contraseña,
+        idcreador,
+        nombre,
+        telefono,
+        ubicacion
+      } = req.body;
+    
+      const connectionPromise = connection.promise();
+    
       try {
-
-        const [emailResult] = await connection.promise().query(
-          'select * from usuario where email  = ?',
+       
+        const [emailResult] = await connectionPromise.query(
+          'SELECT * FROM usuario WHERE email = ?',
           [email]
         );
-
         if (emailResult.length > 0) {
           return res.status(400).json({ message: 'El correo electrónico ya está usado por otro usuario' });
         }
-
-  
-        const [rolResult] = await connection.promise().query(
+    
+        
+        const [rolResult] = await connectionPromise.query(
           'SELECT nombre FROM rol WHERE idrol = ?',
           [rol_idrol]
         );
-
         if (rolResult.length === 0) {
           return res.status(400).json({ message: 'El rol especificado no existe' });
         }
-
         const nombreRol = rolResult[0].nombre;
-
-
-        const [creadorRolResult] = await connection.promise().query(
-          'select nombre from rol where idrol  = ?',
-          [rol_idrol]
+    
+        
+        const [creadorRolResult] = await connectionPromise.query(
+          'SELECT r.nombre FROM usuario u JOIN rol r ON u.rol_idrol = r.idrol WHERE u.idusuario = ?',
+          [idcreador]
         );
-
         if (creadorRolResult.length === 0) {
           return res.status(400).json({ message: 'El creador especificado no existe' });
         }
-
         const nombreRolCreador = creadorRolResult[0].nombre;
-
-
+    
+       
         if (nombreRol === 'Superusuario' && nombreRolCreador !== 'Superusuario') {
           return res.status(403).json({ message: 'Solo los superusuarios pueden crear Superusuarios' });
         }
-
-
-
+    
+       
         const hashedPasswordBinary = Buffer.from(contraseña, 'utf8');
-
-        const [result] = await connection.promise().query(
+        const [usuarioResult] = await connectionPromise.query(
           'INSERT INTO usuario (rol_idrol, email, contraseña, fechacreacion, fechaactualizacion, idcreador, idactualizacion, eliminado) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
           [rol_idrol, email, hashedPasswordBinary, new Date(), null, idcreador, null, 0]
         );
-
-        res.status(201).json({ message: 'Usuario registrado', userId: result.insertId });
+    
+        const usuarioId = usuarioResult.insertId;
+    
+        
+        const { lat, lng } = ubicacion;
+        const pointWKT = `POINT(${lng} ${lat})`;
+        const [clienteResult] = await connectionPromise.query(
+          'INSERT INTO cliente (usuario_idusuario, nombre, telefono, ubicacion, eliminado) VALUES (?, ?, ?, ST_GeomFromText(?), ?)',
+          [usuarioId, nombre, telefono, pointWKT, 0]
+        );
+    
+        res.status(201).json({
+          message: 'Usuario y Cliente registrados exitosamente',
+          usuarioId,
+          clienteId: clienteResult.insertId
+        });
+    
       } catch (error) {
-        console.error('Error al registrar usuario:', error);
-        res.status(500).json({ message: 'Error al registrar usuario' });
+        console.error('Error al registrar usuario/cliente:', error);
+        res.status(500).json({ message: 'Error al registrar usuario/cliente' });
       }
-    },
+    }
+    ,
     consultar: async (req, res) => {
       try {
         const [rows] = await connection.promise().query('SELECT * FROM usuario WHERE eliminado = ?', [0]);
