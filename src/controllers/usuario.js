@@ -18,13 +18,13 @@ module.exports = (connection) => {
     
       try {
        
-        const [emailResult] = await connectionPromise.query(
+       /* const [emailResult] = await connectionPromise.query(
           'SELECT * FROM usuario WHERE email = ?',
           [email]
         );
         if (emailResult.length > 0) {
           return res.status(400).json({ message: 'El correo electrónico ya está usado por otro usuario' });
-        }
+        }*/
     
         
         const [rolResult] = await connectionPromise.query(
