@@ -18,13 +18,6 @@ module.exports = (connection) => {
     
       try {
        
-       /* const [emailResult] = await connectionPromise.query(
-          'SELECT * FROM usuario WHERE email = ?',
-          [email]
-        );
-        if (emailResult.length > 0) {
-          return res.status(400).json({ message: 'El correo electrónico ya está usado por otro usuario' });
-        }*/
     
         
         const [rolResult] = await connectionPromise.query(
@@ -75,8 +68,12 @@ module.exports = (connection) => {
         });
     
       } catch (error) {
-        console.error('Error al registrar usuario/cliente:', error);
-        res.status(500).json({ message: 'Error al registrar usuario/cliente' });
+        if (error.code === 'ER_DUP_ENTRY') {
+          return res.status(400).json({ message: 'El correo ya está registrado' });
+        } else {
+          console.error('Error inesperado:', error);
+          return res.status(500).json({ message: 'Error al registrar usuario/cliente' });
+        }
       }
     }
     ,
