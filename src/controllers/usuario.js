@@ -29,7 +29,7 @@ module.exports = (connection) => {
         }
         const nombreRol = rolResult[0].nombre;
     
-        
+        /*
         const [creadorRolResult] = await connectionPromise.query(
           'SELECT r.nombre FROM usuario u JOIN rol r ON u.rol_idrol = r.idrol WHERE u.idusuario = ?',
           [idcreador]
@@ -43,7 +43,7 @@ module.exports = (connection) => {
         if (nombreRol === 'Superusuario' && nombreRolCreador !== 'Superusuario') {
           return res.status(403).json({ message: 'Solo los superusuarios pueden crear Superusuarios' });
         }
-    
+    */
        
         const hashedPasswordBinary = Buffer.from(contraseña, 'utf8');
         const [usuarioResult] = await connectionPromise.query(
