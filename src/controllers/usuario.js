@@ -8,18 +8,13 @@ module.exports = (connection) => {
         rol_idrol,
         email,
         contraseña,
-        idcreador,
         nombre,
-        telefono,
-        ubicacion
+        telefono
       } = req.body;
     
       const connectionPromise = connection.promise();
     
       try {
-       
-    
-        
         const [rolResult] = await connectionPromise.query(
           'SELECT nombre FROM rol WHERE idrol = ?',
           [rol_idrol]
@@ -29,36 +24,23 @@ module.exports = (connection) => {
         }
         const nombreRol = rolResult[0].nombre;
     
-        /*
-        const [creadorRolResult] = await connectionPromise.query(
-          'SELECT r.nombre FROM usuario u JOIN rol r ON u.rol_idrol = r.idrol WHERE u.idusuario = ?',
-          [idcreador]
-        );
-        if (creadorRolResult.length === 0) {
-          return res.status(400).json({ message: 'El creador especificado no existe' });
-        }
-        const nombreRolCreador = creadorRolResult[0].nombre;
-    
-       
-        if (nombreRol === 'Superusuario' && nombreRolCreador !== 'Superusuario') {
-          return res.status(403).json({ message: 'Solo los superusuarios pueden crear Superusuarios' });
-        }
-    */
-       
         const hashedPasswordBinary = Buffer.from(contraseña, 'utf8');
         const [usuarioResult] = await connectionPromise.query(
           'INSERT INTO usuario (rol_idrol, email, contraseña, fechacreacion, fechaactualizacion, idcreador, idactualizacion, eliminado) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-          [rol_idrol, email, hashedPasswordBinary, new Date(), null, idcreador, null, 0]
+          [rol_idrol, email, hashedPasswordBinary, new Date(), null, null, null, 0]
         );
     
         const usuarioId = usuarioResult.insertId;
     
         
-        const { lat, lng } = ubicacion;
-        const pointWKT = `POINT(${lng} ${lat})`;
+        await connectionPromise.query(
+          'UPDATE usuario SET idcreador = ? WHERE idusuario = ?',
+          [usuarioId, usuarioId]
+        );
+    
         const [clienteResult] = await connectionPromise.query(
-          'INSERT INTO cliente (usuario_idusuario, nombre, telefono, ubicacion, eliminado) VALUES (?, ?, ?, ST_GeomFromText(?), ?)',
-          [usuarioId, nombre, telefono, pointWKT, 0]
+          'INSERT INTO cliente (usuario_idusuario, nombre, telefono, eliminado) VALUES (?, ?, ?, ?)',
+          [usuarioId, nombre, telefono, 0]
         );
     
         res.status(201).json({
@@ -76,6 +58,7 @@ module.exports = (connection) => {
         }
       }
     }
+    
     ,
     consultar: async (req, res) => {
       try {
