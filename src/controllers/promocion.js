@@ -272,6 +272,98 @@ module.exports = (connection) => {
                 console.error('Error:', error);
                 res.status(500).json({ message: 'Error' });
             }
+        },
+        promocionGeneral: async (req, res) => {
+            const {
+                matriz_idmatriz,
+                categoria_idcategoria,
+                nombre,
+                descripcion,
+                precio,
+                vigenciainicio,
+                vigenciafin,
+                tipo,
+            } = req.body;
+        
+            try {
+                
+                const [matrizResult] = await connection.promise().query(
+                    'SELECT idmatriz FROM matriz WHERE idmatriz = ?',
+                    [matriz_idmatriz]
+                );
+                if (matrizResult.length === 0) {
+                    return res.status(400).json({ message: 'La matriz especificada no existe' });
+                }
+        
+                
+                const [empresasResult] = await connection.promise().query(
+                    'SELECT idempresa FROM empresa WHERE matriz_idmatriz = ?',
+                    [matriz_idmatriz]
+                );
+        
+                if (empresasResult.length === 0) {
+                    return res.status(400).json({ message: 'No hay empresas asociadas a la matriz especificada' });
+                }
+        
+                
+                let imageResults = [];
+                if (req.files && req.files.length > 0) {
+                    const uploadPromises = req.files.map((file) => {
+                        return new Promise((resolve, reject) => {
+                            const uploadStream = cloudinary.uploader.upload_stream(
+                                { resource_type: "image" },
+                                (error, result) => {
+                                    if (error) {
+                                        reject(error);
+                                    } else {
+                                        resolve(result);
+                                    }
+                                }
+                            );
+                            uploadStream.end(file.buffer);
+                        });
+                    });
+        
+                    imageResults = await Promise.all(uploadPromises);
+                }
+        
+                
+                const insertPromises = empresasResult.map(async (empresa) => {
+                    
+                    const [result] = await connection.promise().query(
+                        'INSERT INTO promocion (empresa_idempresa, categoria_idcategoria, nombre, descripcion, precio, vigenciainicio, vigenciafin, tipo, eliminado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                        [empresa.idempresa, categoria_idcategoria, nombre, descripcion, precio, vigenciainicio, vigenciafin, tipo, 0]
+                    );
+        
+                    const promocionId = result.insertId;
+        
+                    
+                    if (imageResults.length > 0) {
+                        const imageInsertPromises = imageResults.map((image) => {
+                            return connection.promise().query(
+                                "INSERT INTO imagen (url, public_id, promocion_idpromocion) VALUES (?, ?, ?)",
+                                [image.secure_url, image.public_id, promocionId]
+                            );
+                        });
+                        await Promise.all(imageInsertPromises);
+                    }
+        
+                    return promocionId;
+                });
+        
+                const promocionesCreadas = await Promise.all(insertPromises);
+        
+                res.status(201).json({
+                    message: 'Promociones generales creadas con imágenes para todas las empresas de la matriz',
+                    promocionesCreadas,
+                });
+            } catch (error) {
+                console.error('Error al crear promociones generales:', error);
+                res.status(500).json({ message: 'Error al crear promociones generales' });
+            }
         }
+        
+        
+
     };
 };
