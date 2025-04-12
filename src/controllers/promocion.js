@@ -3,7 +3,7 @@ module.exports = (connection) => {
     return {
         consultar: async (req, res) => {
             try {
-                
+
                 const [promociones] = await connection.promise().query(
                     `SELECT 
                         p.idpromocion,
@@ -19,13 +19,13 @@ module.exports = (connection) => {
                      
                      WHERE p.eliminado = 0`
                 );
-        
-               
+
+
                 if (promociones.length === 0) {
                     return res.status(404).json({ message: 'No se encontraron promociones' });
                 }
-        
-                
+
+
                 const promocionesConImagenes = await Promise.all(
                     promociones.map(async (promocion) => {
                         const [imagenes] = await connection.promise().query(
@@ -42,7 +42,7 @@ module.exports = (connection) => {
                         };
                     })
                 );
-        
+
                 res.status(200).json(promocionesConImagenes);
             } catch (error) {
                 console.error('Error al consultar promociones:', error);
@@ -52,9 +52,9 @@ module.exports = (connection) => {
 
         consultarId: async (req, res) => {
             const { id } = req.params;
-        
+
             try {
-                
+
                 const [promociones] = await connection.promise().query(
                     `SELECT 
                         p.idpromocion,
@@ -70,21 +70,21 @@ module.exports = (connection) => {
                      WHERE p.idpromocion = ? AND p.eliminado = 0`,
                     [id]
                 );
-        
-               
+
+
                 if (promociones.length === 0) {
                     return res.status(404).json({ message: 'Promoción no encontrada' });
                 }
-        
+
                 const promocion = promociones[0];
-        
-                
+
+
                 const [imagenes] = await connection.promise().query(
                     'SELECT idimagen, url, public_id FROM imagen WHERE promocion_idpromocion = ?',
                     [id]
                 );
-        
-                
+
+
                 const respuesta = {
                     ...promocion,
                     imagenes: imagenes.map(img => ({
@@ -93,7 +93,7 @@ module.exports = (connection) => {
                         public_id: img.public_id
                     }))
                 };
-        
+
                 res.status(200).json(respuesta);
             } catch (error) {
                 console.error('Error al consultar promoción:', error);
@@ -112,9 +112,9 @@ module.exports = (connection) => {
                 vigenciafin,
                 tipo,
             } = req.body;
-        
+
             try {
-                
+
                 const [empresaResult] = await connection.promise().query(
                     'SELECT idempresa FROM empresa WHERE idempresa = ?',
                     [empresa_idempresa]
@@ -122,7 +122,7 @@ module.exports = (connection) => {
                 if (empresaResult.length === 0) {
                     return res.status(400).json({ message: 'La empresa especificada no existe' });
                 }
-        
+
                 const [categoriaResult] = await connection.promise().query(
                     'SELECT idcategoria FROM categoria WHERE idcategoria = ?',
                     [categoria_idcategoria]
@@ -130,24 +130,24 @@ module.exports = (connection) => {
                 if (categoriaResult.length === 0) {
                     return res.status(400).json({ message: 'La categoría especificada no existe' });
                 }
-        
-              
+
+
                 const [result] = await connection.promise().query(
                     'INSERT INTO promocion (empresa_idempresa, categoria_idcategoria, nombre, descripcion, precio, vigenciainicio, vigenciafin, tipo, eliminado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
                     [empresa_idempresa, categoria_idcategoria, nombre, descripcion, precio, vigenciainicio, vigenciafin, tipo, 0]
                 );
-        
+
                 const promocionId = result.insertId;
-        
-                
+
+
                 if (req.files && req.files.length > 0) {
                     const uploadPromises = req.files.map((file) => {
                         return new Promise((resolve, reject) => {
                             const uploadStream = cloudinary.uploader.upload_stream(
-                                { 
-                                    resource_type: "image", 
-                                    format: "webp", 
-                                    transformation: { width: 800, height: 600, crop: "limit" } 
+                                {
+                                    resource_type: "image",
+                                    format: "webp",
+                                    transformation: { width: 600, height: 450, crop: "limit" }
                                 },
                                 (error, result) => {
                                     if (error) {
@@ -160,10 +160,10 @@ module.exports = (connection) => {
                             uploadStream.end(file.buffer);
                         });
                     });
-                    
-        
+
+
                     const imageResults = await Promise.all(uploadPromises);
-        
+
                     const insertPromises = imageResults.map((image) => {
                         return new Promise((resolve, reject) => {
                             connection.query(
@@ -179,10 +179,10 @@ module.exports = (connection) => {
                             );
                         });
                     });
-        
+
                     await Promise.all(insertPromises);
                 }
-        
+
                 res.status(201).json({ message: 'Promoción registrada con imágenes', promocionId });
             } catch (error) {
                 console.error('Error al registrar promoción:', error);
@@ -289,9 +289,9 @@ module.exports = (connection) => {
                 vigenciafin,
                 tipo,
             } = req.body;
-        
+
             try {
-                
+
                 const [matrizResult] = await connection.promise().query(
                     'SELECT idmatriz FROM matriz WHERE idmatriz = ?',
                     [matriz_idmatriz]
@@ -299,24 +299,28 @@ module.exports = (connection) => {
                 if (matrizResult.length === 0) {
                     return res.status(400).json({ message: 'La matriz especificada no existe' });
                 }
-        
-                
+
+
                 const [empresasResult] = await connection.promise().query(
                     'SELECT idempresa FROM empresa WHERE matriz_idmatriz = ?',
                     [matriz_idmatriz]
                 );
-        
+
                 if (empresasResult.length === 0) {
                     return res.status(400).json({ message: 'No hay empresas asociadas a la matriz especificada' });
                 }
-        
-                
+
+
                 let imageResults = [];
                 if (req.files && req.files.length > 0) {
                     const uploadPromises = req.files.map((file) => {
                         return new Promise((resolve, reject) => {
                             const uploadStream = cloudinary.uploader.upload_stream(
-                                { resource_type: "image" },
+                                { resource_type: "image",
+                                    format: "webp",
+                                    transformation: { width: 600, height: 450, crop: "limit" }
+
+                                 },
                                 (error, result) => {
                                     if (error) {
                                         reject(error);
@@ -328,21 +332,21 @@ module.exports = (connection) => {
                             uploadStream.end(file.buffer);
                         });
                     });
-        
+
                     imageResults = await Promise.all(uploadPromises);
                 }
-        
-                
+
+
                 const insertPromises = empresasResult.map(async (empresa) => {
-                    
+
                     const [result] = await connection.promise().query(
                         'INSERT INTO promocion (empresa_idempresa, categoria_idcategoria, nombre, descripcion, precio, vigenciainicio, vigenciafin, tipo, eliminado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
                         [empresa.idempresa, categoria_idcategoria, nombre, descripcion, precio, vigenciainicio, vigenciafin, tipo, 0]
                     );
-        
+
                     const promocionId = result.insertId;
-        
-                    
+
+
                     if (imageResults.length > 0) {
                         const imageInsertPromises = imageResults.map((image) => {
                             return connection.promise().query(
@@ -352,12 +356,12 @@ module.exports = (connection) => {
                         });
                         await Promise.all(imageInsertPromises);
                     }
-        
+
                     return promocionId;
                 });
-        
+
                 const promocionesCreadas = await Promise.all(insertPromises);
-        
+
                 res.status(201).json({
                     message: 'Promociones generales creadas con imágenes para todas las empresas de la matriz',
                     promocionesCreadas,
@@ -367,8 +371,8 @@ module.exports = (connection) => {
                 res.status(500).json({ message: 'Error al crear promociones generales' });
             }
         }
-        
-        
+
+
 
     };
 };
