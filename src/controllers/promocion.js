@@ -146,8 +146,10 @@ module.exports = (connection) => {
                             const uploadStream = cloudinary.uploader.upload_stream(
                                 {
                                     resource_type: "image",
-                                    format: "webp",
-                                    transformation: { width: 600, height: 450, crop: "limit" }
+                                    transformation: [
+                                        { width: 600, height: 450, crop: "limit" },
+                                        { quality: "auto", fetch_format: "auto" }
+                                    ]
                                 },
                                 (error, result) => {
                                     if (error) {
@@ -157,6 +159,7 @@ module.exports = (connection) => {
                                     }
                                 }
                             );
+                            
                             uploadStream.end(file.buffer);
                         });
                     });
