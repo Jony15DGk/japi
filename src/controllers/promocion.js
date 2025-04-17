@@ -454,7 +454,56 @@ module.exports = (connection) => {
                 console.error('Error al crear promociones generales:', error);
                 res.status(500).json({ message: 'Error al crear promociones generales' });
             }
+        }, consultarPorRango: async (req, res) => {
+            const { lat, lng, rango } = req.body; 
+            try {
+                const [promociones] = await connection.promise().query(
+                    `SELECT 
+                        p.idpromocion,
+                        p.empresa_idempresa,
+                        p.categoria_idcategoria,
+                        p.nombre AS promocion_nombre,
+                        p.descripcion AS promocion_descripcion,
+                        p.precio,
+                        p.vigenciainicio,
+                        p.vigenciafin,
+                        p.tipo,
+                        e.nombre AS empresa_nombre,
+                        e.descripcion AS empresa_descripcion
+                     FROM promocion AS p
+                     INNER JOIN empresa AS e ON p.empresa_idempresa = e.idempresa
+                     WHERE ST_Distance_Sphere(e.ubicacion, POINT(?, ?)) <= ? AND p.eliminado = 0`,
+                    [lng, lat, rango]
+                );
+        
+                if (promociones.length === 0) {
+                    return res.status(404).json({ message: 'No se encontraron promociones en el rango especificado' });
+                }
+        
+                const promocionesConImagenes = await Promise.all(
+                    promociones.map(async (promocion) => {
+                        const [imagenes] = await connection.promise().query(
+                            'SELECT idimagen, url, public_id FROM imagen WHERE promocion_idpromocion = ?',
+                            [promocion.idpromocion]
+                        );
+                        return {
+                            ...promocion,
+                            imagenes: imagenes.map(img => ({
+                                id: img.idimagen,
+                                url: img.url,
+                                public_id: img.public_id
+                            }))
+                        };
+                    })
+                );
+        
+                res.status(200).json(promocionesConImagenes);
+            } catch (error) {
+                console.error('Error al consultar promociones por rango:', error);
+                res.status(500).json({ message: 'Error al consultar promociones' });
+            }
         }
+        
 
 
 
