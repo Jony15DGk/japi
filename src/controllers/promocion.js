@@ -159,7 +159,7 @@ module.exports = (connection) => {
                                     }
                                 }
                             );
-                            
+
                             uploadStream.end(file.buffer);
                         });
                     });
@@ -196,21 +196,21 @@ module.exports = (connection) => {
         actualizarPromocion: async (req, res) => {
             const promocionId = req.params.id;
             const {
-                empresa_idempresa, categoria_idcategoria, nombre, descripcion, precio, vigenciainicio, vigenciafin,tipo, imagenes_a_eliminar 
+                empresa_idempresa, categoria_idcategoria, nombre, descripcion, precio, vigenciainicio, vigenciafin, tipo, imagenes_a_eliminar
             } = req.body;
-        
+
             try {
-                
+
                 const [promocionExistente] = await connection.promise().query(
                     'SELECT * FROM promocion WHERE idpromocion = ? AND eliminado = 0',
                     [promocionId]
                 );
-        
+
                 if (promocionExistente.length === 0) {
                     return res.status(404).json({ message: 'Promoción no encontrada' });
                 }
-        
-                
+
+
                 if (empresa_idempresa) {
                     const [empresaResult] = await connection.promise().query(
                         'SELECT idempresa FROM empresa WHERE idempresa = ?',
@@ -220,8 +220,8 @@ module.exports = (connection) => {
                         return res.status(400).json({ message: 'La empresa especificada no existe' });
                     }
                 }
-        
-                
+
+
                 if (categoria_idcategoria) {
                     const [categoriaResult] = await connection.promise().query(
                         'SELECT idcategoria FROM categoria WHERE idcategoria = ?',
@@ -231,11 +231,11 @@ module.exports = (connection) => {
                         return res.status(400).json({ message: 'La categoría especificada no existe' });
                     }
                 }
-        
-                
+
+
                 const updateFields = {};
                 const updateValues = [];
-        
+
                 if (empresa_idempresa) {
                     updateFields.empresa_idempresa = empresa_idempresa;
                     updateValues.push(empresa_idempresa);
@@ -268,40 +268,40 @@ module.exports = (connection) => {
                     updateFields.tipo = tipo;
                     updateValues.push(tipo);
                 }
-        
+
                 if (Object.keys(updateFields).length > 0) {
                     const setClause = Object.keys(updateFields).map(key => `${key} = ?`).join(', ');
                     updateValues.push(promocionId);
-                    
+
                     await connection.promise().query(
                         `UPDATE promocion SET ${setClause} WHERE idpromocion = ?`,
                         updateValues
                     );
                 }
-        
-                
+
+
                 if (imagenes_a_eliminar && imagenes_a_eliminar.length > 0) {
-                
+
                     const deletePromises = imagenes_a_eliminar.map(async (public_id) => {
                         try {
-                           
+
                             await cloudinary.uploader.destroy(public_id);
-                            
-                          
+
+
                             await connection.promise().query(
                                 'DELETE FROM imagen WHERE public_id = ? AND promocion_idpromocion = ?',
                                 [public_id, promocionId]
                             );
                         } catch (error) {
                             console.error(`Error al eliminar imagen ${public_id}:`, error);
-                            
+
                         }
                     });
-        
+
                     await Promise.all(deletePromises);
                 }
-        
-                
+
+
                 if (req.files && req.files.length > 0) {
                     const uploadPromises = req.files.map((file) => {
                         return new Promise((resolve, reject) => {
@@ -322,19 +322,19 @@ module.exports = (connection) => {
                             uploadStream.end(file.buffer);
                         });
                     });
-        
+
                     const imageResults = await Promise.all(uploadPromises);
-        
+
                     const insertPromises = imageResults.map((image) => {
                         return connection.promise().query(
                             "INSERT INTO imagen (url, public_id, promocion_idpromocion) VALUES (?, ?, ?)",
                             [image.secure_url, image.public_id, promocionId]
                         );
                     });
-        
+
                     await Promise.all(insertPromises);
                 }
-        
+
                 res.status(200).json({ message: 'Promoción actualizada exitosamente', promocionId });
             } catch (error) {
                 console.error('Error al actualizar promoción:', error);
@@ -400,11 +400,12 @@ module.exports = (connection) => {
                     const uploadPromises = req.files.map((file) => {
                         return new Promise((resolve, reject) => {
                             const uploadStream = cloudinary.uploader.upload_stream(
-                                { resource_type: "image",
+                                {
+                                    resource_type: "image",
                                     format: "webp",
                                     transformation: { width: 600, height: 450, crop: "limit" }
 
-                                 },
+                                },
                                 (error, result) => {
                                     if (error) {
                                         reject(error);
@@ -455,7 +456,7 @@ module.exports = (connection) => {
                 res.status(500).json({ message: 'Error al crear promociones generales' });
             }
         }, consultarPorRango: async (req, res) => {
-            const { lat, lng, rango } = req.body; 
+            const { lat, lng, rango } = req.body;
             try {
                 const [promociones] = await connection.promise().query(
                     `SELECT 
@@ -473,17 +474,17 @@ module.exports = (connection) => {
                      FROM promocion AS p
                      INNER JOIN empresa AS e ON p.empresa_idempresa = e.idempresa
                     WHERE ST_Distance_Sphere(e.ubicacion, POINT(?, ?)) <= ? AND p.eliminado = 0`,
-                    [parseFloat(lng), parseFloat(lat), rango] 
+                    [parseFloat(lat), parseFloat(lng), rango]
                 );
-                
 
 
-                
-        
+
+
+
                 if (promociones.length === 0) {
                     return res.status(404).json({ message: 'No se encontraron promociones en el rango especificado' });
                 }
-        
+
                 const promocionesConImagenes = await Promise.all(
                     promociones.map(async (promocion) => {
                         const [imagenes] = await connection.promise().query(
@@ -500,14 +501,14 @@ module.exports = (connection) => {
                         };
                     })
                 );
-        
+
                 res.status(200).json(promocionesConImagenes);
             } catch (error) {
                 console.error('Error al consultar promociones por rango:', error);
                 res.status(500).json({ message: 'Error al consultar promociones' });
             }
         }
-        
+
 
 
 
