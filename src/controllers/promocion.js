@@ -473,14 +473,14 @@ module.exports = (connection) => {
                         e.descripcion AS empresa_descripcion
                      FROM promocion AS p
                      INNER JOIN empresa AS e ON p.empresa_idempresa = e.idempresa
-                    WHERE ST_Distance_Sphere(
-    e.ubicacion, 
-    POINT(
-        IF(? < 0, ?, ?), 
-        IF(? > 0, ?, ?)
+                    WHERE (
+    6371000 * acos(
+        cos(radians(?)) * cos(radians(ST_X(e.ubicacion))) * 
+        cos(radians(ST_Y(e.ubicacion)) - radians(?)) + 
+        sin(radians(?)) * sin(radians(ST_X(e.ubicacion)))
     )
 ) <= ? AND p.eliminado = 0`,
-[parseFloat(lat), parseFloat(lng), parseFloat(lat), parseFloat(lat), parseFloat(lng), parseFloat(lat), rango]
+[parseFloat(lat), parseFloat(lng), parseFloat(lat), rango]
                 );
 
 
