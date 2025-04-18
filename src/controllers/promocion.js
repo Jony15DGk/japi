@@ -473,7 +473,7 @@ module.exports = (connection) => {
                         e.descripcion AS empresa_descripcion
                      FROM promocion AS p
                      INNER JOIN empresa AS e ON p.empresa_idempresa = e.idempresa
-                  WHERE ST_Distance_Sphere(e.ubicacion, ST_PointFromText(CONCAT('POINT(', ?, ' ', ?, ')'))) <= ? AND p.eliminado = 0`, 
+                  WHERE ST_Distance_Sphere(e.ubicacion, ST_MakePoint(?, ?)) <= ? AND p.eliminado = 0`, 
 [parseFloat(lat), parseFloat(lng), rango]
                 );
 
