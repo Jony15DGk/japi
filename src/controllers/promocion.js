@@ -473,7 +473,7 @@ module.exports = (connection) => {
                      FROM promocion AS p
                      INNER JOIN empresa AS e ON p.empresa_idempresa = e.idempresa
                     WHERE ST_Distance_Sphere(e.ubicacion, POINT(?, ?)) <= ? AND p.eliminado = 0`,
-                    [parseFloat(lng), parseFloat(lat), rango] // Aquí está el cambio importante
+                    [parseFloat(lng), parseFloat(lat), rango] 
                 );
                 
 
