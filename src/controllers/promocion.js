@@ -455,7 +455,7 @@ module.exports = (connection) => {
                 res.status(500).json({ message: 'Error al crear promociones generales' });
             }
         }, consultarPorRango: async (req, res) => {
-            const { lng, lat, rango } = req.body; 
+            const { lat, lng, rango } = req.body; 
             try {
                 const [promociones] = await connection.promise().query(
                     `SELECT 
@@ -473,7 +473,7 @@ module.exports = (connection) => {
                      FROM promocion AS p
                      INNER JOIN empresa AS e ON p.empresa_idempresa = e.idempresa
                     WHERE ST_Distance_Sphere(e.ubicacion, POINT(?, ?)) <= ? AND p.eliminado = 0`,
-                [parseFloat(lng), parseFloat(lat), rango]
+                [parseFloat(lat), parseFloat(lng), rango]
 
 
                 );
