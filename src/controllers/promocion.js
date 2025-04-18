@@ -473,10 +473,12 @@ module.exports = (connection) => {
                      FROM promocion AS p
                      INNER JOIN empresa AS e ON p.empresa_idempresa = e.idempresa
                     WHERE ST_Distance_Sphere(e.ubicacion, POINT(?, ?)) <= ? AND p.eliminado = 0`,
-                [parseFloat(lat), parseFloat(lng), rango]
-
-
+                    [parseFloat(lng), parseFloat(lat), rango] // Aquí está el cambio importante
                 );
+                
+
+
+                
         
                 if (promociones.length === 0) {
                     return res.status(404).json({ message: 'No se encontraron promociones en el rango especificado' });
