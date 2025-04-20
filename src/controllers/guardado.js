@@ -124,22 +124,55 @@ module.exports = (connection) => {
         console.error('Error:', error);
         res.status(500).json({ message: 'Error' });
       }
-    }, guardadoUsuario: async (req, res) => {
-      const { id } = req.params;
+    },guardadoUsuario: async (req, res) => {
+  const { id } = req.params;
 
-      try {
-        const [rows] = await connection.promise().query('select g.idguardado, g.promocion_idpromocion, p.nombre, p.vigenciafin, p.vigenciainicio, e.nombre, p.precio from guardado as g inner join cliente as c on g.cliente_idcliente = c.idcliente inner join promocion as p on p.idpromocion = g.promocion_idpromocion inner join empresa as e on e.idempresa= p.empresa_idempresa inner join usuario as  u on c.usuario_idusuario= u.idusuario where c.usuario_idusuario =? AND g.eliminado = ?', [id, 0]);
+  try {
+    const [rows] = await connection.promise().query(
+      `SELECT 
+         g.idguardado, 
+         g.promocion_idpromocion, 
+         p.nombre AS nombre_promocion, 
+         p.vigenciafin, 
+         p.vigenciainicio, 
+         e.nombre AS nombre_empresa, 
+         p.precio 
+       FROM guardado AS g 
+       INNER JOIN cliente AS c ON g.cliente_idcliente = c.idcliente 
+       INNER JOIN promocion AS p ON p.idpromocion = g.promocion_idpromocion 
+       INNER JOIN empresa AS e ON e.idempresa = p.empresa_idempresa 
+       INNER JOIN usuario AS u ON c.usuario_idusuario = u.idusuario 
+       WHERE c.usuario_idusuario = ? AND g.eliminado = ?`,
+      [id, 0]
+    );
 
-        if (rows.length === 0) {
-          return res.status(404).json({ message: 'Guardado no encontrado' });
-        }
-
-        res.status(200).json(rows[0]);
-      } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ message: 'Error' });
-      }
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Guardado no encontrado' });
     }
+    const promocionesConImagenes = await Promise.all(
+      rows.map(async (promocion) => {
+          const [imagenes] = await connection.promise().query(
+              'SELECT idimagen, url, public_id FROM imagen WHERE promocion_idpromocion = ?',
+              [promocion.promocion_idpromocion]
+          );
+          return {
+              ...promocion,
+              imagenes: imagenes.map(img => ({
+                  id: img.idimagen,
+                  url: img.url,
+                  public_id: img.public_id
+              }))
+          };
+      })
+  );
+
+    res.status(200).json(promocionesConImagenes); 
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ message: 'Error al obtener guardados' });
+  }
+}
+
 
   };
 };
