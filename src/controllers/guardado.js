@@ -128,7 +128,7 @@ module.exports = (connection) => {
       const { id } = req.params;
 
       try {
-        const [rows] = await connection.promise().query('select g.idguardado, g.promocion_idpromocion, p.nombre, p.vigenciafin, p.vigenciainicio, e.nombre, p.precio from guardado as g inner join cliente as c on g.cliente_idcliente = c.idcliente inner join promocion as p on p.idpromocion = g.promocion_idpromocion inner join empresa as e on e.idempresa= p.empresa_idempresa inner join usuario as  u on c.usuario_idusuario= u.idusuario where c.usuario_idusuario =?', [id, 0]);
+        const [rows] = await connection.promise().query('select g.idguardado, g.promocion_idpromocion, p.nombre, p.vigenciafin, p.vigenciainicio, e.nombre, p.precio from guardado as g inner join cliente as c on g.cliente_idcliente = c.idcliente inner join promocion as p on p.idpromocion = g.promocion_idpromocion inner join empresa as e on e.idempresa= p.empresa_idempresa inner join usuario as  u on c.usuario_idusuario= u.idusuario where c.usuario_idusuario =? AND g.eliminado = ?', [id, 0]);
 
         if (rows.length === 0) {
           return res.status(404).json({ message: 'Guardado no encontrado' });
