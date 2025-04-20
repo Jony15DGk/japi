@@ -11,6 +11,7 @@ module.exports = (connection) => {
   router.get('/guardado/:id', controller.consultarId);
   router.patch('/guardado/:id', controller.actualizarGuardado);
   router.delete('/guardado/:id', controller.eliminarGuardado); 
+  router.get('/guardadoUsuario/:id', controller.guardadoUsuario);
 
   return router;
 };
