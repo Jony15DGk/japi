@@ -1,3 +1,4 @@
+const { getToken, getTokenData} = require('../config/jwt.config');
 const authenticateToken = require('../middleware/auth');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
@@ -48,6 +49,7 @@ module.exports = (connection) => {
           usuarioId,
           clienteId: clienteResult.insertId
         });
+        const token = getToken({email, contraseña});
     
       } catch (error) {
         if (error.code === 'ER_DUP_ENTRY') {
@@ -57,9 +59,7 @@ module.exports = (connection) => {
           return res.status(500).json({ message: 'Error al registrar usuario/cliente' });
         }
       }
-    }
-    
-    ,
+    },
     consultar: async (req, res) => {
       try {
         const [rows] = await connection.promise().query('SELECT * FROM usuario WHERE eliminado = ?', [0]);
