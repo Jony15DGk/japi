@@ -1,7 +1,7 @@
 const express = require('express');
 const userController = require('../controllers/usuario');
 const authenticateToken = require('../middleware/auth'); 
-const verificarConfirmacion = require('../middlewares/verificarConfirmacion');
+const verificarConfirmacion = require('../middleware/verificarConfirmacion');
 const router = express.Router();
 
 module.exports = (connection) => {
