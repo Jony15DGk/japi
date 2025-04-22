@@ -19,6 +19,6 @@ module.exports = (connection) => {
   router.delete('/usuario/superusuario/:id', authenticateToken(['Superusuario']), controller.eliminarsuperusuario); 
   router.post('/usuario/superusuario', authenticateToken(['Superusuario']), controller.superusuario); 
   router.patch('/usuario/superusuario/:id', authenticateToken(['Superusuario']), controller.eliminarsuperusuario); 
- 
+  router.post('/usuario/confirmarUsuario/:token', controller.confirmarUsuario)
   return router;
 };
