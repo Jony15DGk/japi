@@ -6,18 +6,19 @@ const getToken=(payload)=>{
     },'SECRET',{expiresIn: '1h'});
 }
 
-const getTokenData = (token)=>{
-   let data = null;
-   jwt.verify(token, 'SECRET',(err, decoded)=>{
-    if(err){
-        console.log('Error al obtener data del token');
-    }else{
-        data = decoded;
-    }
-   });
-
-   return data;
-}
+const getTokenData = (token) => {
+    return new Promise((resolve) => {
+      jwt.verify(token, 'SECRET', (err, decoded) => {
+        if (err) {
+          console.log('Error al obtener data del token');
+          return resolve(null);
+        } else {
+          return resolve(decoded);
+        }
+      });
+    });
+  };
+  
 
 module.exports ={
     getToken,

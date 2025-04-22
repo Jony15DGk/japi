@@ -1,6 +1,8 @@
-const { getToken, getTokenData} = require('../config/jwt.config');
+const { getToken, getTokenData } = require('../config/jwt.config');
+const { getTemplate, sendEmail } = require('../config/mail.config');
 const authenticateToken = require('../middleware/auth');
 const jwt = require('jsonwebtoken');
+
 require('dotenv').config();
 module.exports = (connection) => {
   return {
@@ -12,9 +14,9 @@ module.exports = (connection) => {
         nombre,
         telefono
       } = req.body;
-    
+
       const connectionPromise = connection.promise();
-    
+
       try {
         const [rolResult] = await connectionPromise.query(
           'SELECT nombre FROM rol WHERE idrol = ?',
@@ -24,33 +26,38 @@ module.exports = (connection) => {
           return res.status(400).json({ message: 'El rol especificado no existe' });
         }
         const nombreRol = rolResult[0].nombre;
-    
+
         const hashedPasswordBinary = Buffer.from(contraseña, 'utf8');
         const [usuarioResult] = await connectionPromise.query(
-          'INSERT INTO usuario (rol_idrol, email, contraseña, fechacreacion, fechaactualizacion, idcreador, idactualizacion, eliminado) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-          [rol_idrol, email, hashedPasswordBinary, new Date(), null, null, null, 0]
+          'INSERT INTO usuario (rol_idrol, email, contraseña, fechacreacion, fechaactualizacion, idcreador, idactualizacion, eliminado, estatus) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          [rol_idrol, email, hashedPasswordBinary, new Date(), null, null, null, 0, 0] // <--- estatus 0 (no confirmado)
         );
-    
+        
         const usuarioId = usuarioResult.insertId;
-    
         
         await connectionPromise.query(
           'UPDATE usuario SET idcreador = ? WHERE idusuario = ?',
           [usuarioId, usuarioId]
         );
-    
+        
         const [clienteResult] = await connectionPromise.query(
           'INSERT INTO cliente (usuario_idusuario, nombre, telefono, eliminado) VALUES (?, ?, ?, ?)',
           [usuarioId, nombre, telefono, 0]
         );
-    
+        
+        
+        const token = getToken({ email }); 
+        const template = getTemplate(nombre, token);
+        await sendEmail(email, 'Confirmación de correo', template);
+        
         res.status(201).json({
-          message: 'Usuario y Cliente registrados exitosamente',
+          success: true,
+          message: 'Usuario y Cliente registrados exitosamente. Se ha enviado un correo de confirmación.',
           usuarioId,
           clienteId: clienteResult.insertId
         });
-        const token = getToken({email, contraseña});
-    
+        
+
       } catch (error) {
         if (error.code === 'ER_DUP_ENTRY') {
           return res.status(400).json({ message: 'El correo ya está registrado' });
@@ -96,17 +103,17 @@ module.exports = (connection) => {
           'SELECT rol_idrol FROM usuario WHERE idusuario = ?',
           [id]
         );
-    
+
         if (rows.length === 0) {
           return res.status(404).json({ message: 'Usuario no encontrado' });
         }
-    
+
         //const { rol_idrol } = rows[0];
-    
+
         const [roles] = await connection.promise().query(
           'SELECT idrol FROM rol WHERE nombre = "Superusuario"'
         );
-    
+
         if (roles.length > 0 && rol_idrol === roles[0].idrol) {
           return res.status(403).json({ message: 'No puedes eliminar un superusuario' });
         }
@@ -394,7 +401,7 @@ module.exports = (connection) => {
         res.status(500).json({ message: 'Error en el servidor' });
       }
 
-    },  actualizarsuperusuario: async (req, res) => {
+    }, actualizarsuperusuario: async (req, res) => {
       const { id } = req.params;
       const { rol_idrol, email, contraseña, fechacreacion, fechaactualizacion, idcreador, idactualizacion } = req.body;
 
@@ -403,11 +410,11 @@ module.exports = (connection) => {
           'SELECT rol_idrol FROM usuario WHERE idusuario = ?',
           [id]
         );
-    
+
         if (rows.length === 0) {
           return res.status(404).json({ message: 'Usuario no encontrado' });
         }
-  
+
 
         let query = 'UPDATE usuario SET ';
         const updates = [];
@@ -469,7 +476,52 @@ module.exports = (connection) => {
         console.error('Error:', error);
         res.status(500).json({ message: 'Error' });
       }
+    }, confirmarUsuario: async (req, res) => {
+      const connectionPromise = connection.promise();
+      try {
+        const { token } = req.params;
+        const data = await getTokenData(token);
+
+        if (!data || !data.data || !data.data.email) {
+          return res.status(400).json({
+            success: false,
+            msg: 'Token inválido o expirado'
+          });
+        }
+    
+        const email = data.data.email;
+    
+        const [usuarios] = await connectionPromise.query(
+          'SELECT idusuario, estatus FROM usuario WHERE email = ?',
+          [email]
+        );
+    
+        if (usuarios.length === 0) {
+          return res.status(404).json({ success: false, msg: 'Usuario no encontrado' });
+        }
+    
+        const usuario = usuarios[0];
+        if (usuario.estatus === 1) {
+          return res.json({ success: true, msg: 'El usuario ya está confirmado' });
+        }
+    
+        
+        await connectionPromise.query(
+          'UPDATE usuario SET estatus = 1 WHERE email = ?',
+          [email]
+        );
+    
+        return res.json({ success: true, msg: 'Correo confirmado exitosamente' });
+    
+      } catch (error) {
+        console.error('Error al confirmar usuario:', error);
+        return res.status(500).json({
+          success: false,
+          msg: 'Error al confirmar usuario'
+        });
+      }
     }
+    
 
 
 
