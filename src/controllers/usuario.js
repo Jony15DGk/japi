@@ -30,7 +30,7 @@ module.exports = (connection) => {
         const hashedPasswordBinary = Buffer.from(contraseña, 'utf8');
         const [usuarioResult] = await connectionPromise.query(
           'INSERT INTO usuario (rol_idrol, email, contraseña, fechacreacion, fechaactualizacion, idcreador, idactualizacion, eliminado, estatus) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-          [rol_idrol, email, hashedPasswordBinary, new Date(), null, null, null, 0, 0] // <--- estatus 0 (no confirmado)
+          [rol_idrol, email, hashedPasswordBinary, new Date(), null, null, null, 0, 0] 
         );
         
         const usuarioId = usuarioResult.insertId;

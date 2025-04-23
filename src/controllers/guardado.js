@@ -27,7 +27,7 @@ module.exports = (connection) => {
       }
     },
     guardado: async (req, res) => {
-      const { promocion_idpromocion, cliente_idcliente, fechaguardada } = req.body;
+      const { promocion_idpromocion, cliente_idcliente } = req.body;
 
       try {
         const [promocionResult] = await connection.promise().query(
@@ -51,7 +51,7 @@ module.exports = (connection) => {
 
         const [result] = await connection.promise().query(
           'INSERT INTO guardado (promocion_idpromocion, cliente_idcliente, fechaguardada, eliminado) VALUES (?, ?, ?, ?)',
-          [promocion_idpromocion, cliente_idcliente, fechaguardada, 0]
+          [promocion_idpromocion, cliente_idcliente, new Date(), 0]
         );
 
         res.status(201).json({ message: 'Guardado registrada', guardadoId: result.insertId });
