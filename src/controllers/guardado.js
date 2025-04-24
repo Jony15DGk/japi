@@ -182,12 +182,12 @@ module.exports = (connection) => {
     res.status(500).json({ message: 'Error al obtener guardados' });
   }
 },eliminarGuardadoPorCliente: async (req, res) => {
-  const { idguardado, idcliente } = req.params;
+  const { idpromocion, idcliente } = req.params;
 
   try {
     const [result] = await connection.promise().query(
-      'UPDATE guardado SET eliminado = ? WHERE idguardado = ? AND cliente_idcliente = ?',
-      [1, idguardado, idcliente]
+      'UPDATE guardado SET eliminado = ? WHERE promocion_idpromocion = ? AND cliente_idcliente = ?',
+      [1, idpromocion, idcliente]
     );
 
     if (result.affectedRows === 0) {
