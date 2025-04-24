@@ -13,7 +13,7 @@ module.exports = (connection) => {
   router.patch('/guardado/:id', controller.actualizarGuardado);
   router.delete('/guardado/:id', controller.eliminarGuardado); 
   router.get('/guardadoUsuario/:id', controller.guardadoUsuario);
-  router.put('/guardadoEPUsuario/:idguardado/cliente/:idcliente/eliminar', controller.eliminarGuardado);
+  router.put('/guardado/:idguardado/cliente/:idcliente/eliminar', controller.eliminarGuardadoPorCliente);
 
 
   return router;
