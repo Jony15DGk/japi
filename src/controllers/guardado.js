@@ -199,6 +199,24 @@ module.exports = (connection) => {
     console.error('Error:', error);
     res.status(500).json({ message: 'Error al eliminar el guardado' });
   }
+},deseliminarGuardadoPorCliente: async (req, res) => {
+  const { idpromocion, idcliente } = req.params;
+
+  try {
+    const [result] = await connection.promise().query(
+      'UPDATE guardado SET eliminado = ? WHERE promocion_idpromocion = ? AND cliente_idcliente = ?',
+      [0, idpromocion, idcliente]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Guardado no encontrado para ese cliente' });
+    }
+
+    res.status(200).json({ message: 'Guardado eliminado lógicamente para el cliente' });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ message: 'Error al eliminar el guardado' });
+  }
 }
 
 
