@@ -212,7 +212,7 @@ module.exports = (connection) => {
       return res.status(404).json({ message: 'Guardado no encontrado para ese cliente' });
     }
 
-    res.status(200).json({ message: 'Guardado eliminado lógicamente para el cliente' });
+    res.status(200).json({ message: 'Guardado deseliminado lógicamente para el cliente' });
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ message: 'Error al eliminar el guardado' });

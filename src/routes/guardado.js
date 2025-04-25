@@ -14,7 +14,7 @@ module.exports = (connection) => {
   router.delete('/guardado/:id', controller.eliminarGuardado); 
   router.get('/guardadoUsuario/:id', controller.guardadoUsuario);
   router.put('/promocion/:idpromocion/cliente/:idcliente/eliminar', controller.eliminarGuardadoPorCliente);
-  router.put('/dpromocion/:idpromocion/cliente/:idcliente/eliminar', controller.deseliminarGuardadoPorCliente);
+  router.put('deseliminar/promocion/:idpromocion/cliente/:idcliente/eliminar', controller.deseliminarGuardadoPorCliente);
 
 
   return router;
