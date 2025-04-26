@@ -41,7 +41,7 @@ const getTemplate = (nombre, token)=>{
       <h2>Correo de prueba para ${nombre}</h2>
       <p>Para confirmar tu correo entra al siguiente enlace</p>
       <a
-      href="https://dapi-production-ca9b.up.railway.app/api/usuario/confirmarUsuario/${token}"
+      href="https://japi-production.up.railway.app/api/usuario/confirmarUsuario/${token}"
       >Confirmar cuenta</a>
    </div>
    `;
