@@ -1,4 +1,4 @@
-const { getToken, getTokenData } = require('../config/jwt.config');
+const { getToken, getTokenData, decodeTokenSinVerificar } = require('../config/jwt.config');
 const { getTemplate, sendEmail } = require('../config/mail.config');
 const authenticateToken = require('../middleware/auth');
 const jwt = require('jsonwebtoken');
@@ -481,11 +481,34 @@ module.exports = (connection) => {
       try {
         const { token } = req.params;
         const data = await getTokenData(token);
-
+    
         if (!data || !data.data || !data.data.email) {
+          
+          
+          const decoded = decodeTokenWithoutVerify(token); 
+          const email = decoded?.data?.email;
+          
+          if (email) {
+            const [usuarios] = await connectionPromise.query(
+              'SELECT idusuario, estatus FROM usuario WHERE email = ?',
+              [email]
+            );
+    
+            if (usuarios.length > 0) {
+              const usuario = usuarios[0];
+              
+              if (usuario.estatus === 0) {
+                
+                const newToken = await generarToken({ email }); 
+                
+                await enviarCorreoConfirmacion(email, newToken); 
+              }
+            }
+          }
+    
           return res.status(400).json({
             success: false,
-            msg: 'Token inválido o expirado'
+            msg: 'Token inválido o expirado. Se ha enviado un nuevo correo de confirmación.'
           });
         }
     
@@ -505,7 +528,6 @@ module.exports = (connection) => {
           return res.json({ success: true, msg: 'El usuario ya está confirmado' });
         }
     
-        
         await connectionPromise.query(
           'UPDATE usuario SET estatus = 1 WHERE email = ?',
           [email]
@@ -521,6 +543,7 @@ module.exports = (connection) => {
         });
       }
     }
+    
     
 
 

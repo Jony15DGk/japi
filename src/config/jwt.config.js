@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const getToken=(payload)=>{
     return jwt.sign({
        data:payload
-    },'SECRET',{expiresIn: '1h'});
+    },process.env.JWT_SECRET,{expiresIn: '1h'});
 }
 
 const getTokenData = (token) => {
@@ -18,9 +18,19 @@ const getTokenData = (token) => {
       });
     });
   };
+
+const  decodeTokenSinVerificar=(token)=>{
+  try {
+    return jwt.decode(token);
+  } catch (error) {
+    return null;
+  }
+
+}
   
 
 module.exports ={
     getToken,
-    getTokenData
+    getTokenData,
+    decodeTokenSinVerificar
 }
