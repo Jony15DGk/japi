@@ -2,7 +2,7 @@ module.exports = (connection) => {
   return {
     consultar: async (req, res) => {
       try {
-        const [rows] = await connection.promise().query('SELECT * FROM listadecategorias WHERE eliminado = ?', [0]);
+        const [rows] = await connection.promise().query('SELECT * FROM listadecategoria WHERE eliminado = ?', [0]);
         res.status(200).json(rows);
       } catch (error) {
         console.error('Error:', error);
@@ -14,7 +14,7 @@ module.exports = (connection) => {
       const { id } = req.params;
 
       try {
-        const [rows] = await connection.promise().query('SELECT * FROM listadecategorias WHERE idlistadecategoria = ? AND eliminado = ?', [id, 0]);
+        const [rows] = await connection.promise().query('SELECT * FROM listadecategoria WHERE idlistadecategoria = ? AND eliminado = ?', [id, 0]);
 
         if (rows.length === 0) {
           return res.status(404).json({ message: 'Lista de categoria no encontrada' });
@@ -49,7 +49,7 @@ module.exports = (connection) => {
         }
 
         const [result] = await connection.promise().query(
-          'INSERT INTO listadecategorias (cliente_idcliente, categoria_idcategoria, eliminado) VALUES (?, ?, ?)',
+          'INSERT INTO listadecategoria (cliente_idcliente, categoria_idcategoria, eliminado) VALUES (?, ?, ?)',
           [cliente_idcliente, categoria_idcategoria, 0]
         );
 
@@ -64,7 +64,7 @@ module.exports = (connection) => {
       const { cliente_idcliente, categoria_idcategoria } = req.body;
 
       try {
-        let query = 'UPDATE listadecategorias SET ';
+        let query = 'UPDATE listadecategoria SET ';
         const updates = [];
         const params = [];
 
@@ -106,7 +106,7 @@ module.exports = (connection) => {
       try {
 
         const [result] = await connection.promise().query(
-          'UPDATE listadecategorias SET eliminado = ? WHERE idlistadecategoria = ?',
+          'UPDATE listadecategoria SET eliminado = ? WHERE idlistadecategoria = ?',
           [1, id]
         );
 

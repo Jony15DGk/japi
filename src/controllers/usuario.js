@@ -10,7 +10,7 @@ module.exports = (connection) => {
       const {
         rol_idrol,
         email,
-        contraseña,
+        password,
         nombre,
         telefono
       } = req.body;
@@ -27,9 +27,9 @@ module.exports = (connection) => {
         }
         const nombreRol = rolResult[0].nombre;
 
-        const hashedPasswordBinary = Buffer.from(contraseña, 'utf8');
+        const hashedPasswordBinary = Buffer.from(password, 'utf8');
         const [usuarioResult] = await connectionPromise.query(
-          'INSERT INTO usuario (rol_idrol, email, contraseña, fechacreacion, fechaactualizacion, idcreador, idactualizacion, eliminado, estatus) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          'INSERT INTO usuario (rol_idrol, email, password, fechacreacion, fechaactualizacion, idcreador, idactualizacion, eliminado, estatus) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
           [rol_idrol, email, hashedPasswordBinary, new Date(), null, null, null, 0, 0] 
         );
         
@@ -96,7 +96,7 @@ module.exports = (connection) => {
     },
     actualizarUsuario: async (req, res) => {
       const { id } = req.params;
-      const { rol_idrol, email, contraseña, fechacreacion, fechaactualizacion, idcreador, idactualizacion } = req.body;
+      const { rol_idrol, email, password, fechacreacion, fechaactualizacion, idcreador, idactualizacion } = req.body;
 
       try {
         const [rows] = await connection.promise().query(
@@ -132,9 +132,9 @@ module.exports = (connection) => {
           params.push(email);
         }
 
-        if (contraseña) {
-          const hashedPasswordBinary = Buffer.from(contraseña, 'utf8');
-          updates.push('contraseña = ?');
+        if (password) {
+          const hashedPasswordBinary = Buffer.from(password, 'utf8');
+          updates.push('password= ?');
           params.push(hashedPasswordBinary);
         }
 
@@ -180,11 +180,11 @@ module.exports = (connection) => {
       }
     },
     login: async (req, res) => {
-      const { email, contraseña } = req.body;
+      const { email, password } = req.body;
 
       try {
         const [rows] = await connection.promise().query(
-          `SELECT idusuario, cliente.nombre as nombrecliente, rol.nombre, rol_idrol, email, contraseña 
+          `SELECT idusuario, cliente.nombre as nombrecliente, rol.nombre, rol_idrol, email, password 
            FROM usuario 
            INNER JOIN rol ON usuario.rol_idrol = rol.idrol 
            INNER JOIN cliente ON cliente.usuario_idusuario = usuario.idusuario 
@@ -197,10 +197,10 @@ module.exports = (connection) => {
         }
 
         const user = rows[0];
-        const storedPassword = user.contraseña.toString('utf8').replace(/\x00/g, '');
+        const storedPassword = user.password.toString('utf8').replace(/\x00/g, '');
 
         console.log('Contraseña almacenada:', storedPassword);
-        console.log('Contraseña ingresada:', contraseña);
+        console.log('Contraseña ingresada:', password);
 
         if (contraseña !== storedPassword) {
           return res.status(401).json({ message: 'Correo o contraseña incorrectos' });
@@ -343,7 +343,7 @@ module.exports = (connection) => {
         res.status(500).json({ message: 'Error en el servidor' });
       }
     }, superusuario: async (req, res) => {
-      const { email, contraseña, idcreador } = req.body;
+      const { email, password, idcreador } = req.body;
 
       try {
 
@@ -357,11 +357,11 @@ module.exports = (connection) => {
         }
 
         const rol_idrol = roles[0].idrol;
-        const hashedPasswordBinary = Buffer.from(contraseña, 'utf8');
+        const hashedPasswordBinary = Buffer.from(password, 'utf8');
 
 
         const [result] = await connection.promise().query(
-          'INSERT INTO usuario (rol_idrol, email, contraseña, fechacreacion, fechaactualizacion, idcreador, idactualizacion, eliminado) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+          'INSERT INTO usuario (rol_idrol, email, password, fechacreacion, fechaactualizacion, idcreador, idactualizacion, eliminado) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
           [rol_idrol, email, hashedPasswordBinary, new Date(), null, idcreador, null, 0]
         );
 
@@ -403,7 +403,7 @@ module.exports = (connection) => {
 
     }, actualizarsuperusuario: async (req, res) => {
       const { id } = req.params;
-      const { rol_idrol, email, contraseña, fechacreacion, fechaactualizacion, idcreador, idactualizacion } = req.body;
+      const { rol_idrol, email, password, fechacreacion, fechaactualizacion, idcreador, idactualizacion } = req.body;
 
       try {
         const [rows] = await connection.promise().query(
@@ -430,9 +430,9 @@ module.exports = (connection) => {
           params.push(email);
         }
 
-        if (contraseña) {
-          const hashedPasswordBinary = Buffer.from(contraseña, 'utf8');
-          updates.push('contraseña = ?');
+        if (password) {
+          const hashedPasswordBinary = Buffer.from(password, 'utf8');
+          updates.push('password = ?');
           params.push(hashedPasswordBinary);
         }
 
