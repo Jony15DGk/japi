@@ -516,7 +516,7 @@ module.exports = (connection) => {
                 
                 const newToken = await getToken({ email }); 
                 
-                await enviarCorreoConfirmacion(email, newToken); 
+                await sendEmail(email, newToken); 
               }
             }
           }
