@@ -511,7 +511,7 @@ module.exports = (connection) => {
     
           return res.status(400).json({
             success: false,
-            msg: 'Token inválido o expirado. Se ha enviado un nuevo correo de confirmación.'
+            tokenExpired:true
           });
         }
     
@@ -523,12 +523,12 @@ module.exports = (connection) => {
         );
     
         if (usuarios.length === 0) {
-          return res.status(404).json({ success: false, msg: 'Usuario no encontrado' });
+          return res.status(404).json({ success: false, userExists:false });
         }
     
         const usuario = usuarios[0];
         if (usuario.estatus === 1) {
-          return res.json({ success: true, msg: 'El usuario ya está confirmado' });
+          return res.json({ success: true, pending:false,userAlreadyVerified:true });
         }
     
         await connectionPromise.query(
@@ -536,7 +536,7 @@ module.exports = (connection) => {
           [email]
         );
     
-        return res.json({ success: true, msg: 'Correo confirmado exitosamente' });
+        return res.json({ success: true, pending:false });
     
       } catch (error) {
         console.error('Error al confirmar usuario:', error);
