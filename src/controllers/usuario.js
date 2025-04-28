@@ -202,7 +202,7 @@ module.exports = (connection) => {
         console.log('Contraseña almacenada:', storedPassword);
         console.log('Contraseña ingresada:', password);
 
-        if (contraseña !== storedPassword) {
+        if (password !== storedPassword) {
           return res.status(401).json({ message: 'Correo o contraseña incorrectos' });
         }
 
