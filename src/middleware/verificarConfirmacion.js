@@ -10,14 +10,13 @@ const verificarConfirmacion = (pool) => {
       );
 
       if (usuarios.length === 0) {
-        return res.status(404).json({ success: false });
+        return res.status(404).json({ success: false, UserExists:false });
       }
 
       const { estatus } = usuarios[0];
 
       if (estatus === 0) {
-        return res.status(401).json({ pending: true });
-        
+        return res.status(401).json({ success: false, UserExists:true, pending: true });
       }
 
       next();

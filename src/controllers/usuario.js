@@ -60,7 +60,7 @@ module.exports = (connection) => {
 
       } catch (error) {
         if (error.code === 'ER_DUP_ENTRY') {
-          return res.status(400).json({ message: 'El correo ya está registrado' });
+          return res.status(400).json({ isEmailExists:true });
         } else {
           console.error('Error inesperado:', error);
           return res.status(500).json({ message: 'Error al registrar usuario/cliente' });
@@ -193,7 +193,7 @@ module.exports = (connection) => {
         );
 
         if (rows.length === 0) {
-          return res.status(401).json({ message: 'Correo o contraseña incorrectos' });
+          return res.status(401).json({ success:false, isEmailExists:false });
         }
 
         const user = rows[0];
@@ -203,7 +203,7 @@ module.exports = (connection) => {
         console.log('Contraseña ingresada:', password);
 
         if (password !== storedPassword) {
-          return res.status(401).json({ message: 'Correo o contraseña incorrectos' });
+          return res.status(401).json({ success:false, isTruePassword:false });
         }
 
         const accessToken = jwt.sign(
@@ -236,7 +236,10 @@ module.exports = (connection) => {
             email: user.email,
             rol_idrol: user.rol_idrol,
             rol: user.nombre
-          }
+          },
+          success:true,
+          isTruePassword:true,
+          pending:false
         });
 
       } catch (error) {
