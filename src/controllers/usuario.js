@@ -14,9 +14,9 @@ module.exports = (connection) => {
         nombre,
         telefono
       } = req.body;
-
+    
       const connectionPromise = connection.promise();
-
+    
       try {
         const [rolResult] = await connectionPromise.query(
           'SELECT nombre FROM rol WHERE idrol = ?',
@@ -25,48 +25,56 @@ module.exports = (connection) => {
         if (rolResult.length === 0) {
           return res.status(400).json({ message: 'El rol especificado no existe' });
         }
-        const nombreRol = rolResult[0].nombre;
-
+    
+        const [emailResult] = await connectionPromise.query(
+          'SELECT idusuario, estatus FROM usuario WHERE email = ?',
+          [email]
+        );
+    
+        if (emailResult.length > 0) {
+          const user = emailResult[0];
+          if (user.estatus === 0) {
+            return res.status(400).json({ IsEmailExist: true, IsEmailVeryfied: false });
+          } else {
+            
+            return res.status(400).json({ IsEmailExist: true, IsEmailVeryfied: true });
+          }
+        }
+    
         const hashedPasswordBinary = Buffer.from(password, 'utf8');
+    
         const [usuarioResult] = await connectionPromise.query(
           'INSERT INTO usuario (rol_idrol, email, password, fechacreacion, fechaactualizacion, idcreador, idactualizacion, eliminado, estatus) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
           [rol_idrol, email, hashedPasswordBinary, new Date(), null, null, null, 0, 0] 
         );
-        
+    
         const usuarioId = usuarioResult.insertId;
-        
+    
         await connectionPromise.query(
           'UPDATE usuario SET idcreador = ? WHERE idusuario = ?',
           [usuarioId, usuarioId]
         );
-        
-        const [clienteResult] = await connectionPromise.query(
+    
+        await connectionPromise.query(
           'INSERT INTO cliente (usuario_idusuario, nombre, telefono, eliminado) VALUES (?, ?, ?, ?)',
           [usuarioId, nombre, telefono, 0]
         );
-        
-        
-        const token = getToken({ email }); 
+    
+        const token = getToken({ email });
         const template = getTemplate(nombre, token);
         await sendEmail(email, 'Confirmación de correo', template);
-        
+    
         res.status(201).json({
-          success: true,
-          message: 'Usuario y Cliente registrados exitosamente. Se ha enviado un correo de confirmación.',
-          usuarioId,
-          clienteId: clienteResult.insertId
+          IsEmailExist: false,
+          IsEmailVeryfied: false,
         });
-        
-
+    
       } catch (error) {
-        if (error.code === 'ER_DUP_ENTRY') {
-          return res.status(400).json({ isEmailExists:true });
-        } else {
-          console.error('Error inesperado:', error);
-          return res.status(500).json({ message: 'Error al registrar usuario/cliente' });
-        }
+        console.error('Error inesperado:', error);
+        return res.status(500).json({ message: 'Error al registrar usuario/cliente' });
       }
-    },
+    }
+    ,
     consultar: async (req, res) => {
       try {
         const [rows] = await connection.promise().query('SELECT * FROM usuario WHERE eliminado = ?', [0]);
@@ -181,52 +189,55 @@ module.exports = (connection) => {
     },
     login: async (req, res) => {
       const { email, password } = req.body;
-
+    
       try {
         const [rows] = await connection.promise().query(
-          `SELECT idusuario, cliente.nombre as nombrecliente, rol.nombre, rol_idrol, email, password 
+          `SELECT idusuario, cliente.nombre as nombrecliente, rol.nombre, rol_idrol, email, password, estatus 
            FROM usuario 
            INNER JOIN rol ON usuario.rol_idrol = rol.idrol 
            INNER JOIN cliente ON cliente.usuario_idusuario = usuario.idusuario 
            WHERE email = ? AND usuario.eliminado = 0`,
           [email]
         );
-
+    
         if (rows.length === 0) {
-          return res.status(401).json({ success:false, isEmailExists:false });
+          return res.status(401).json({ isEmailExists: false, IsEmailVeryfied: false });
         }
-
+    
         const user = rows[0];
         const storedPassword = user.password.toString('utf8').replace(/\x00/g, '');
-
+    
         console.log('Contraseña almacenada:', storedPassword);
         console.log('Contraseña ingresada:', password);
-
+    
         if (password !== storedPassword) {
-          return res.status(401).json({ success:false, isTruePassword:false });
+          return res.status(401).json({ 
+            IsEmailExist: true, 
+            isTruePassword: false, 
+            pending: user.estatus === 0 ? true : false 
+          });
         }
-
+    
         const accessToken = jwt.sign(
           { idusuario: user.idusuario, email: user.email, rol_idrol: user.rol_idrol, nombrecliente: user.nombrecliente, rol: user.nombre },
           process.env.ACCESS_TOKEN_SECRET,
           { expiresIn: '15m' }
         );
-
+    
         const refreshToken = jwt.sign(
           { idusuario: user.idusuario, email: user.email, rol_idrol: user.rol_idrol, nombrecliente: user.nombrecliente, rol: user.nombre },
           process.env.REFRESH_TOKEN_SECRET,
           { expiresIn: '7d' }
         );
-
-
+    
         const fechaexpiracion = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
         const fechacreacion = new Date(Date.now());
-
+    
         await connection.promise().query(
           'INSERT INTO refreshtoken (usuario_idusuario, token, fechaexpiracion, fechacreacion, eliminado) VALUES (?, ?, ?, ?, ?)',
           [user.idusuario, refreshToken, fechaexpiracion, fechacreacion, 0]
         );
-
+    
         res.json({
           accessToken,
           refreshToken,
@@ -237,16 +248,17 @@ module.exports = (connection) => {
             rol_idrol: user.rol_idrol,
             rol: user.nombre
           },
-          success:true,
-          isTruePassword:true,
-          pending:false
+          success: true,
+          isTruePassword: true,
+          pending: user.estatus === 0 ? true : false
         });
-
+    
       } catch (error) {
         console.error('Error al iniciar sesión:', error);
         res.status(500).json({ message: 'Error en el servidor' });
       }
-    },
+    }
+    ,
     eliminarUsuario: async (req, res) => {
       const { id } = req.params;
 
@@ -528,7 +540,7 @@ module.exports = (connection) => {
     
         const usuario = usuarios[0];
         if (usuario.estatus === 1) {
-          return res.json({ success: true, pending:false,userAlreadyVerified:true });
+          return res.json({ IsEmailExist:true,IsEmailVeryfied:true });
         }
     
         await connectionPromise.query(
