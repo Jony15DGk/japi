@@ -514,7 +514,7 @@ module.exports = (connection) => {
               
               if (usuario.estatus === 0) {
                 
-                const newToken = await generarToken({ email }); 
+                const newToken = await getToken({ email }); 
                 
                 await enviarCorreoConfirmacion(email, newToken); 
               }
