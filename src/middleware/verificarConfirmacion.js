@@ -17,6 +17,7 @@ const verificarConfirmacion = (pool) => {
 
       if (estatus === 0) {
         return res.status(401).json({ pending: true });
+        
       }
 
       next();

@@ -485,7 +485,7 @@ module.exports = (connection) => {
         if (!data || !data.data || !data.data.email) {
           
           
-          const decoded = decodeTokenWithoutVerify(token); 
+          const decoded = decodeTokenSinVerificar(token); 
           const email = decoded?.data?.email;
           
           if (email) {
