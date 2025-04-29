@@ -539,7 +539,7 @@ module.exports = (connection) => {
     
         const usuario = usuarios[0];
         if (usuario.estatus === 1) {
-          return res.json({ IsEmailExist:true,IsEmailVeryfied:true });
+          return res.json({ IsEmailExist:true,IsEmailVeryfied:true, pending:false });
         }
     
         await connectionPromise.query(
@@ -547,7 +547,7 @@ module.exports = (connection) => {
           [email]
         );
     
-        return res.json({ success: true, pending:false });
+        return res.json({ IsEmailExist:true,IsEmailVeryfied:true,pending:false });
     
       } catch (error) {
         console.error('Error al confirmar usuario:', error);
