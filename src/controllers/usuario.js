@@ -201,7 +201,7 @@ module.exports = (connection) => {
         );
     
         if (rows.length === 0) {
-          return res.status(401).json({ isEmailExists: false, IsEmailVeryfied: false });
+          return res.status(401).json({ isEmailExists: false, IsEmailVeryfied: false, pending:false});
         }
     
         const user = rows[0];
