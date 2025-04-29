@@ -7,17 +7,18 @@ const getToken=(payload)=>{
 }
 
 const getTokenData = (token) => {
-    return new Promise((resolve) => {
-      jwt.verify(token, 'SECRET', (err, decoded) => {
-        if (err) {
-          console.log('Error al obtener data del token');
-          return resolve(null);
-        } else {
-          return resolve(decoded);
-        }
-      });
+  return new Promise((resolve) => {
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => { 
+      if (err) {
+        console.log('Error al obtener data del token');
+        return resolve(null);
+      } else {
+        return resolve(decoded);
+      }
     });
-  };
+  });
+};
+
 
 const  decodeTokenSinVerificar=(token)=>{
   try {

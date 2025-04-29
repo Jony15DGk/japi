@@ -498,8 +498,6 @@ module.exports = (connection) => {
         const data = await getTokenData(token);
     
         if (!data || !data.data || !data.data.email) {
-          
-          
           const decoded = decodeTokenSinVerificar(token); 
           const email = decoded?.data?.email;
           
@@ -508,25 +506,25 @@ module.exports = (connection) => {
               'SELECT idusuario, estatus FROM usuario WHERE email = ?',
               [email]
             );
-    
+        
             if (usuarios.length > 0) {
               const usuario = usuarios[0];
               
               if (usuario.estatus === 0) {
-                
                 const newToken = await getToken({ email }); 
                 
-                const template = getTemplate(email, token);
+                const template = getTemplate(email, newToken);
                 await sendEmail(email, 'Confirmación de correo', template);
               }
             }
           }
-    
+        
           return res.status(400).json({
             success: false,
-            tokenExpired:true
+            tokenExpired: true
           });
         }
+        
     
         const email = data.data.email;
     
