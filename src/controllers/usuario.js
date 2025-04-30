@@ -34,10 +34,14 @@ module.exports = (connection) => {
         if (emailResult.length > 0) {
           const user = emailResult[0];
           if (user.estatus === 0) {
-            return res.status(400).json({ IsEmailExist: true, IsEmailVeryfied: false });
+            return res.status(400).json({  success: false,
+              emailExists: true,
+              pending: true });
           } else {
             
-            return res.status(400).json({ IsEmailExist: true, IsEmailVeryfied: true });
+            return res.status(400).json({ success: false,
+              emailExists: true,
+              pending: false });
           }
         }
     
@@ -65,8 +69,9 @@ module.exports = (connection) => {
         await sendEmail(email, 'Confirmación de correo', template);
     
         res.status(201).json({
-          IsEmailExist: false,
-          IsEmailVeryfied: false,
+          success: true,
+              emailExists: false,
+              pending: true
         });
     
       } catch (error) {
@@ -201,7 +206,7 @@ module.exports = (connection) => {
         );
     
         if (rows.length === 0) {
-          return res.status(401).json({ isEmailExists: false, IsEmailVeryfied: false, pending:false});
+          return res.status(401).json({success: false, emailExists: false,  pending:false});
         }
     
         const user = rows[0];
@@ -212,8 +217,8 @@ module.exports = (connection) => {
     
         if (password !== storedPassword) {
           return res.status(401).json({ 
-            IsEmailExist: true, 
-            isTruePassword: false, 
+            success:false,
+            emailExists: true, 
             pending: user.estatus === 0 ? true : false 
           });
         }
@@ -249,7 +254,7 @@ module.exports = (connection) => {
             rol: user.nombre
           },
           success: true,
-          isTruePassword: true,
+          emailExists: true,
           pending: user.estatus === 0 ? true : false
         });
     
@@ -521,7 +526,8 @@ module.exports = (connection) => {
         
           return res.status(400).json({
             success: false,
-            tokenExpired: true
+            emailExists: true,
+            pending:true
           });
         }
         
@@ -534,12 +540,12 @@ module.exports = (connection) => {
         );
     
         if (usuarios.length === 0) {
-          return res.status(404).json({ success: false, userExists:false });
+          return res.status(404).json({ success: false, emailExists:false, pending:true });
         }
     
         const usuario = usuarios[0];
         if (usuario.estatus === 1) {
-          return res.json({ IsEmailExist:true,IsEmailVeryfied:true, pending:false });
+          return res.json({ success: true, emailExists:true, pending:false });
         }
     
         await connectionPromise.query(
@@ -547,7 +553,7 @@ module.exports = (connection) => {
           [email]
         );
     
-        return res.json({ IsEmailExist:true,IsEmailVeryfied:true,pending:false });
+        return res.json({ success: false, emailExists:false, pending:true });
     
       } catch (error) {
         console.error('Error al confirmar usuario:', error);
