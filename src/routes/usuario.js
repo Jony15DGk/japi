@@ -8,6 +8,7 @@ module.exports = (connection) => {
   const controller = userController(connection);
   const middlewareConfirmacion = verificarConfirmacion(connection); 
 
+  router.post('/administrador', controller.administrador); 
   router.post('/usuario', controller.usuario); 
   router.post('/vendedor', controller.vendedor);
   router.post('/usuario/login', middlewareConfirmacion, controller.login);
