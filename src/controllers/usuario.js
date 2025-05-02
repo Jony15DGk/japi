@@ -589,6 +589,82 @@ module.exports = (connection) => {
           msg: 'Error al confirmar usuario'
         });
       }
+    }, vendedor: async (req, res) => {
+      const {
+        email,
+        password,
+        nombre,
+        telefono
+      } = req.body;
+    
+      const connectionPromise = connection.promise();
+    
+      try {
+        const [roles] = await connection.promise().query(
+          'SELECT idrol FROM rol WHERE nombre = ?',
+          ['Vendedor']
+        );
+
+        if (roles.length === 0) {
+          return res.status(400).json({ message: 'El rol vendedor no existe' });
+        }
+
+        const rol_idrol = roles[0].idrol;
+
+    
+        const [emailResult] = await connectionPromise.query(
+          'SELECT idusuario, estatus FROM usuario WHERE email = ?',
+          [email]
+        );
+    
+        if (emailResult.length > 0) {
+          const user = emailResult[0];
+          if (user.estatus === 0) {
+            return res.status(400).json({  success: false,
+              emailExists: true,
+              pending: true });
+          } else {
+            
+            return res.status(400).json({ success: false,
+              emailExists: true,
+              pending: false });
+          }
+        }
+    
+        const hashedPasswordBinary = Buffer.from(password, 'utf8');
+    
+        const [usuarioResult] = await connectionPromise.query(
+          'INSERT INTO usuario (rol_idrol, email, password, fechacreacion, fechaactualizacion, idcreador, idactualizacion, eliminado, estatus) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          [rol_idrol, email, hashedPasswordBinary, new Date(), null, null, null, 0, 0] 
+        );
+    
+        const usuarioId = usuarioResult.insertId;
+    
+        await connectionPromise.query(
+          'UPDATE usuario SET idcreador = ? WHERE idusuario = ?',
+          [usuarioId, usuarioId]
+        );
+    
+        await connectionPromise.query(
+          'INSERT INTO cliente (usuario_idusuario, nombre, telefono, eliminado) VALUES (?, ?, ?, ?)',
+          [usuarioId, nombre, telefono, 0]
+        );
+    
+        const token = getToken({ email });
+        const template = getTemplate(nombre, token);
+        await sendEmail(email, 'Confirmación de correo', template);
+    
+        res.status(201).json({
+          success: true,
+              emailExists: false,
+              pending: true,
+              message: 'Vendedor registrado'
+        });
+    
+      } catch (error) {
+        console.error('Error inesperado:', error);
+        return res.status(500).json({ message: 'Error al registrar usuario/cliente' });
+      }
     }
     
     
