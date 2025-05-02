@@ -304,39 +304,66 @@ module.exports = (connection) => {
     },
     refreshToken: async (req, res) => {
       const { refreshToken } = req.body;
-
+    
       if (!refreshToken) {
         return res.status(401).json({ message: 'Refresh token no proporcionado' });
       }
-
+    
       try {
+        // Verificar si el refreshToken es válido y está activo
         const [rows] = await connection.promise().query(
-          'SELECT * FROM refreshtoken WHERE token = ? AND fechaexpiracion > NOW() AND eliminado = 0',
+          'SELECT usuario_idusuario FROM refreshtoken WHERE token = ? AND fechaexpiracion > NOW() AND eliminado = 0',
           [refreshToken]
         );
-
+    
         if (rows.length === 0) {
           return res.status(403).json({ message: 'Refresh token inválido, expirado o eliminado' });
         }
-
-        jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
-          if (err) {
-            return res.status(403).json({ message: 'Refresh token inválido o expirado' });
-          }
-
-          const accessToken = jwt.sign(
-            { idusuario: user.idusuario, email: user.email, rol_idrol: user.rol_idrol, nombre: user.nombre },
-            process.env.ACCESS_TOKEN_SECRET,
-            { expiresIn: '15m' }
-          );
-
-          res.json({ accessToken });
+    
+        const { usuario_idusuario } = rows[0];
+    
+        
+        const [userRows] = await connection.promise().query(
+          `SELECT idusuario, cliente.nombre AS nombrecliente, rol.nombre AS rol, rol_idrol, email, estatus
+           FROM usuario
+           INNER JOIN rol ON usuario.rol_idrol = rol.idrol
+           INNER JOIN cliente ON cliente.usuario_idusuario = usuario.idusuario
+           WHERE idusuario = ? AND usuario.eliminado = 0`,
+          [usuario_idusuario]
+        );
+    
+        if (userRows.length === 0) {
+          return res.status(403).json({ message: 'Usuario no encontrado o eliminado' });
+        }
+    
+        const user = userRows[0];
+    
+        
+        const accessToken = jwt.sign(
+          { idusuario: user.idusuario, email: user.email, rol_idrol: user.rol_idrol, nombrecliente: user.nombrecliente, rol: user.rol },
+          process.env.ACCESS_TOKEN_SECRET,
+          { expiresIn: '15m' }
+        );
+    
+       
+        res.json({
+          accessToken,
+          user: {
+            idusuario: user.idusuario,
+            nombrecliente: user.nombrecliente,
+            email: user.email,
+            rol_idrol: user.rol_idrol,
+            rol: user.rol
+          },
+          success: true
         });
+    
       } catch (error) {
         console.error('Error al refrescar el token:', error);
         res.status(500).json({ message: 'Error en el servidor' });
       }
-    },
+    }
+    ,
     logout: async (req, res) => {
       console.log('Logout iniciado');
       const { refreshToken } = req.body;
