@@ -9,6 +9,7 @@ module.exports = (connection) => {
   const middlewareConfirmacion = verificarConfirmacion(connection); 
 
   router.post('/usuario', controller.usuario); 
+  router.post('/vendedor', controller.vendedor);
   router.post('/usuario/login', middlewareConfirmacion, controller.login);
   router.get('/usuario', controller.consultar); 
   router.get('/usuario/:id', controller.consultarId); 
