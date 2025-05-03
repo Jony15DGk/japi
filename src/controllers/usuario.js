@@ -701,6 +701,7 @@ module.exports = (connection) => {
     
         if (emailResult.length > 0) {
           const user = emailResult[0];
+          console.log('Correo encontrado:', emailResult);
           if (user.estatus === 0) {
             return res.status(400).json({  success: false,
               emailExists: true,
