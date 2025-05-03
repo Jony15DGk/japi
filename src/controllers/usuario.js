@@ -652,7 +652,7 @@ module.exports = (connection) => {
           [usuarioId, nombre, telefono, 0]
         );
     
-        const token = getToken({cleanEmail});
+        const token = getToken({email});
         const template = getTemplate(nombre, token);
         await sendEmail(cleanEmail , 'Confirmación de correo', template);
     
@@ -733,7 +733,7 @@ module.exports = (connection) => {
           [usuarioId, nombre, telefono, 0]
         );
     
-        const token = getToken({ cleanEmail });
+        const token = getToken({ email });
         const template = getTemplate(nombre, token);
         await sendEmail(cleanEmail, 'Confirmación de correo', template);
     
@@ -741,7 +741,7 @@ module.exports = (connection) => {
           success: true,
               emailExists: false,
               pending: true,
-              message: 'Administrador registrado'
+              message: 'Cliente registrado'
         });
     
       } catch (error) {
