@@ -600,7 +600,7 @@ module.exports = (connection) => {
       } = req.body;
     
       const connectionPromise = connection.promise();
-    
+      const cleanEmail = email.trim().toLowerCase();
       try {
         const [roles] = await connection.promise().query(
           'SELECT idrol FROM rol WHERE nombre = ?',
@@ -616,7 +616,7 @@ module.exports = (connection) => {
     
         const [emailResult] = await connectionPromise.query(
           'SELECT idusuario, estatus FROM usuario WHERE email = ?',
-          [email]
+          [cleanEmail ]
         );
     
         if (emailResult.length > 0) {
@@ -637,7 +637,7 @@ module.exports = (connection) => {
     
         const [usuarioResult] = await connectionPromise.query(
           'INSERT INTO usuario (rol_idrol, email, password, fechacreacion, fechaactualizacion, idcreador, idactualizacion, eliminado, estatus) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-          [rol_idrol, email, hashedPasswordBinary, new Date(), null, null, null, 0, 0] 
+          [rol_idrol, cleanEmail , hashedPasswordBinary, new Date(), null, null, null, 0, 0] 
         );
     
         const usuarioId = usuarioResult.insertId;
@@ -652,9 +652,9 @@ module.exports = (connection) => {
           [usuarioId, nombre, telefono, 0]
         );
     
-        const token = getToken({ email });
+        const token = getToken({cleanEmail});
         const template = getTemplate(nombre, token);
-        await sendEmail(email, 'Confirmación de correo', template);
+        await sendEmail(cleanEmail , 'Confirmación de correo', template);
     
         res.status(201).json({
           success: true,
@@ -681,7 +681,7 @@ module.exports = (connection) => {
       try {
         const [roles] = await connection.promise().query(
           'SELECT idrol FROM rol WHERE nombre = ?',
-          ['Usuario']
+          ['Cliente']
         );
 
         if (roles.length === 0) {
@@ -733,9 +733,9 @@ module.exports = (connection) => {
           [usuarioId, nombre, telefono, 0]
         );
     
-        const token = getToken({ email });
+        const token = getToken({ cleanEmail });
         const template = getTemplate(nombre, token);
-        await sendEmail(email, 'Confirmación de correo', template);
+        await sendEmail(cleanEmail, 'Confirmación de correo', template);
     
         res.status(201).json({
           success: true,
