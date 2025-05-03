@@ -685,6 +685,7 @@ module.exports = (connection) => {
         );
 
         if (roles.length === 0) {
+          console.log('Correo encontrado:', emailResult);
           return res.status(400).json({ success: false,
             emailExists: true,
             pending: false });
