@@ -675,8 +675,9 @@ module.exports = (connection) => {
         telefono
       } = req.body;
     
-      const connectionPromise = connection.promise();
-    
+      const db = connection.promise();
+      const cleanEmail = email.trim().toLowerCase();
+
       try {
         const [roles] = await connection.promise().query(
           'SELECT idrol FROM rol WHERE nombre = ?',
@@ -692,9 +693,9 @@ module.exports = (connection) => {
         const rol_idrol = roles[0].idrol;
 
     
-        const [emailResult] = await connectionPromise.query(
+        const [emailResult] = await db.query(
           'SELECT idusuario, estatus FROM usuario WHERE email = ?',
-          [email]
+          [cleanEmail]
         );
     
         if (emailResult.length > 0) {
@@ -713,19 +714,19 @@ module.exports = (connection) => {
     
         const hashedPasswordBinary = Buffer.from(password, 'utf8');
     
-        const [usuarioResult] = await connectionPromise.query(
+        const [usuarioResult] = await db.query(
           'INSERT INTO usuario (rol_idrol, email, password, fechacreacion, fechaactualizacion, idcreador, idactualizacion, eliminado, estatus) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-          [rol_idrol, email, hashedPasswordBinary, new Date(), null, null, null, 0, 0] 
+          [rol_idrol, cleanEmail, hashedPasswordBinary, new Date(), null, null, null, 0, 0] 
         );
     
         const usuarioId = usuarioResult.insertId;
     
-        await connectionPromise.query(
+        await db.query(
           'UPDATE usuario SET idcreador = ? WHERE idusuario = ?',
           [usuarioId, usuarioId]
         );
     
-        await connectionPromise.query(
+        await db.query(
           'INSERT INTO cliente (usuario_idusuario, nombre, telefono, eliminado) VALUES (?, ?, ?, ?)',
           [usuarioId, nombre, telefono, 0]
         );
