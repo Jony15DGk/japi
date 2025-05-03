@@ -740,8 +740,7 @@ module.exports = (connection) => {
         res.status(201).json({
           success: true,
               emailExists: false,
-              pending: true,
-              message: 'Cliente registrado'
+              pending: true
         });
     
       } catch (error) {
