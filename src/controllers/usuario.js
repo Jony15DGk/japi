@@ -3,6 +3,7 @@ const { getTemplate, sendEmail, getPasswordResetTemplate } = require('../config/
 const authenticateToken = require('../middleware/auth');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 require('dotenv').config();
 module.exports = (connection) => {
