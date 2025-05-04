@@ -2,7 +2,7 @@ const { getToken, getTokenData, decodeTokenSinVerificar } = require('../config/j
 const { getTemplate, sendEmail, getPasswordResetTemplate } = require('../config/mail.config');
 const authenticateToken = require('../middleware/auth');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 require('dotenv').config();
 module.exports = (connection) => {
