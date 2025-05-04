@@ -8,7 +8,7 @@ module.exports = (connection) => {
   const controller = userController(connection);
   const middlewareConfirmacion = verificarConfirmacion(connection); 
 
-  router.post('/resetpassword', controller.resetPassword); 
+  router.post('/reset-password', controller.resetPassword); 
   router.post('/resetpassword-request', controller.resetPasswordRequest); 
   router.post('/administrador', controller.administrador); 
   router.post('/usuario', controller.usuario); 
