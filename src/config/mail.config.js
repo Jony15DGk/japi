@@ -41,14 +41,27 @@ const getTemplate = (nombre, token)=>{
       <h2>Correo de prueba para ${nombre}</h2>
       <p>Para confirmar tu correo entra al siguiente enlace</p>
       <a
-      href="https://japi-production.up.railway.app/api/usuario/confirmarUsuario/${token}"
+      href="${process.env.URL_API}/usuario/confirmarUsuario/${token}"
       >Confirmar cuenta</a>
    </div>
    `;
 }
 
+const getPasswordResetTemplate = (nombre, token) => {
+  return `
+  <div id="email__content">
+     <h2>Hola ${nombre},</h2>
+     <p>Has solicitado restablecer tu contraseña. Para hacerlo, haz clic en el siguiente enlace:</p>
+     <a href="${process.env.URL_API}/reset-password?token=${token}">Restablecer contraseña</a>
+     <p>Este enlace expirará en 1 hora.</p>
+  </div>
+  `;
+}
+
+
 module.exports={
     sendEmail,
-    getTemplate
+    getTemplate,
+    getPasswordResetTemplate
 }
 

@@ -1,7 +1,8 @@
 const { getToken, getTokenData, decodeTokenSinVerificar } = require('../config/jwt.config');
-const { getTemplate, sendEmail } = require('../config/mail.config');
+const { getTemplate, sendEmail, getPasswordResetTemplate } = require('../config/mail.config');
 const authenticateToken = require('../middleware/auth');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 
 require('dotenv').config();
 module.exports = (connection) => {
@@ -747,11 +748,65 @@ module.exports = (connection) => {
         console.error('Error inesperado:', error);
         return res.status(500).json({ message: 'Error al registrar usuario/cliente' });
       }
+    },resetPasswordRequest : async (req, res) => {
+      const { email } = req.body;
+    
+      try {
+        const [users] = await connection.promise().query('SELECT idusuario, nombre FROM usuario WHERE email = ?', [email]);
+    
+        if (users.length === 0) {
+          return res.status(404).json({ success: false, message: 'Correo no encontrado' });
+        }
+    
+        const token = crypto.randomBytes(32).toString('hex');
+        const expires = new Date(Date.now() + 1 * 60 * 60 * 1000); 
+    
+        await connection.promise().query(
+          'INSERT INTO tokenpassword (usuario_idusuario, token, fechaexpiracion) VALUES (?, ?, ?)',
+          [users[0].idusuario, token, expires]
+        );
+    
+        const template = getPasswordResetTemplate(users[0].nombre, token);
+        await sendEmail(email, 'Restablecimiento de contraseña', template);
+    
+        res.json({ success: true, message: 'Correo enviado' });
+    
+      } catch (error) {
+        console.error('Error en reset de contraseña:', error);
+        res.status(500).json({ message: 'Error en el servidor' });
+      }
+    }, resetPassword: async (req, res) => {
+      const { token, newPassword } = req.body;
+    
+      try {
+        const [records] = await connection.promise().query(
+          'SELECT usuario_idusuario FROM tokenpassword WHERE token = ? AND fechaexpiracion > NOW()',
+          [token]
+        );
+    
+        if (records.length === 0) {
+          return res.status(400).json({ success: false, message: 'Token inválido o expirado' });
+        }
+    
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+    
+        await connection.promise().query(
+          'UPDATE usuario SET password = ? WHERE idusuario = ?',
+          [hashedPassword, records[0].usuario_idusuario]
+        );
+    
+        await connection.promise().query(
+          'DELETE FROM tokenpassword WHERE token = ?',
+          [token]
+        );
+    
+        res.json({ success: true, message: 'Contraseña actualizada correctamente' });
+    
+      } catch (error) {
+        console.error('Error al actualizar la contraseña:', error);
+        res.status(500).json({ message: 'Error en el servidor' });
+      }
     }
-    
-    
-
-
 
   };
 };
