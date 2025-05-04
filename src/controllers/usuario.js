@@ -788,8 +788,8 @@ module.exports = (connection) => {
         if (records.length === 0) {
           return res.status(400).json({ success: false, message: 'Token inválido o expirado' });
         }
-    
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const hashedPassword = Buffer.from(newPassword, 'utf8');
+        
     
         await connection.promise().query(
           'UPDATE usuario SET password = ? WHERE idusuario = ?',
