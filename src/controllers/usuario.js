@@ -752,7 +752,7 @@ module.exports = (connection) => {
       const { email } = req.body;
     
       try {
-        const [users] = await connection.promise().query('SELECT idusuario, nombre FROM usuario WHERE email = ?', [email]);
+        const [users] = await connection.promise().query('SELECT u.idusuario, c.nombre FROM usuario as u inner join cliente as c on u.idusuario=c.usuario_idusuario  WHERE email = ?', [email]);
     
         if (users.length === 0) {
           return res.status(404).json({ success: false, message: 'Correo no encontrado' });
