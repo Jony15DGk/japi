@@ -44,7 +44,7 @@ module.exports = (connection) => {
     
   
           const [result] = await connection.promise().query(
-            'INSERT INTO favorito (cliente_idcliente, nombre, ubicacion eliminado) VALUES (?, ?, ?,?)',
+            'INSERT INTO favorito (cliente_idcliente, nombre, ubicacion, eliminado) VALUES (?, ?, ?,?)',
             [cliente_idcliente, nombre, pointWKT, 0]
           );
   
