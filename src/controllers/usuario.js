@@ -782,7 +782,9 @@ module.exports = (connection) => {
         const template = getPasswordResetTemplate(users[0].nombre, token);
         await sendEmail(email, 'Restablecimiento de contraseña', template);
     
-        res.json({ success: true, message: 'Correo enviado' });
+        res.json({ success: true, emailExists: true,
+          pending: true
+});
     
       } catch (error) {
         console.error('Error en reset de contraseña:', error);
