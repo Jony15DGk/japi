@@ -749,21 +749,33 @@ module.exports = (connection) => {
         console.error('Error inesperado:', error);
         return res.status(500).json({ message: 'Error al registrar usuario/cliente' });
       }
-    },resetPasswordRequest : async (req, res) => {
+    },resetPasswordRequest :async (req, res) => {
       const { email } = req.body;
     
       try {
-        const [users] = await connection.promise().query('SELECT u.idusuario, c.nombre FROM usuario as u inner join cliente as c on u.idusuario=c.usuario_idusuario  WHERE email = ?', [email]);
+        const [users] = await connection.promise().query(
+          'SELECT idusuario, nombre, estatus FROM usuario WHERE email = ?', 
+          [email]
+        );
     
         if (users.length === 0) {
-          return res.status(404).json({ success: false, message: 'Correo no encontrado' });
+          return res.status(404).json({ success: false, emailExists: false,
+            pending: false
+});
+        }
+    
+        if (users[0].estatus !== 1) {
+          return res.status(400).json({ success: false,
+            emailExists: true,
+            pending: true
+});
         }
     
         const token = crypto.randomBytes(32).toString('hex');
-        const expires = new Date(Date.now() + 1 * 60 * 60 * 1000); 
+        const expires = new Date(Date.now() + 1 * 60 * 60 * 1000);
     
         await connection.promise().query(
-          'INSERT INTO tokenpassword (usuario_idusuario, token, fechaexpiracion) VALUES (?, ?, ?)',
+          'INSERT INTO password_reset (usuario_idusuario, token, fechaexpiracion) VALUES (?, ?, ?)',
           [users[0].idusuario, token, expires]
         );
     
@@ -776,7 +788,8 @@ module.exports = (connection) => {
         console.error('Error en reset de contraseña:', error);
         res.status(500).json({ message: 'Error en el servidor' });
       }
-    }, resetPassword: async (req, res) => {
+    }
+    , resetPassword: async (req, res) => {
       const { token, newPassword } = req.body;
     
       try {
