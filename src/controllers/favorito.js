@@ -28,32 +28,34 @@ module.exports = (connection) => {
       },
       favorito: async (req, res) => {
         const { cliente_idcliente, nombre, ubicacion } = req.body;
-  
-        try {
-          const [clienteResult] = await connection.promise().query(
-            'SELECT idcliente FROM cliente WHERE idcliente = ?',
-            [cliente_idcliente]
-          );
-  
-          if (clienteResult.length === 0) {
-            return res.status(400).json({ message: 'El cliente especificado no existe' });
-          }
-  
-          const { lat, lng } = ubicacion;      
-          const pointWKT = `POINT(${lng} ${lat})`;
     
-  
-          const [result] = await connection.promise().query(
-            'INSERT INTO favorito (cliente_idcliente, nombre, ubicacion, eliminado) VALUES (?, ?, ?,?)',
-            [cliente_idcliente, nombre, pointWKT, 0]
-          );
-  
-          res.status(201).json({ message: 'Favorito registrada', favoritoId: result.insertId });
+        try {
+            const [clienteResult] = await connection.promise().query(
+                'SELECT idcliente FROM cliente WHERE idcliente = ?',
+                [cliente_idcliente]
+            );
+    
+            if (clienteResult.length === 0) {
+                return res.status(400).json({ message: 'El cliente especificado no existe' });
+            }
+    
+            const { lat, lng } = ubicacion;
+            const pointWKT = `POINT(${lng} ${lat})`;
+    
+            const [result] = await connection.promise().query(
+                'INSERT INTO favorito (cliente_idcliente, nombre, ubicacion, eliminado) VALUES (?, ?, ST_GeomFromText(?), ?)',
+                [cliente_idcliente, nombre, pointWKT, 0]
+            );
+    
+            res.status(201).json({ message: 'Favorito registrado', favoritoId: result.insertId });
         } catch (error) {
-          console.error('Error al registrar favorito:', error);
-          res.status(500).json({ message: 'Error al registrar favorito' });
+            console.error('Error al registrar favorito:', error);
+            res.status(500).json({ 
+                message: 'Error al registrar favorito',
+                error: error.message 
+            });
         }
-      },
+    },
       actualizarFavorito: async (req, res) => {
         const { id } = req.params;
         const { cliente_idcliente, nombre, ubicacion } = req.body;
