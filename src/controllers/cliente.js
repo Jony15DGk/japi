@@ -61,7 +61,7 @@ module.exports = (connection) => {
   
         actualizarCliente: async (req, res) => {
             const { id } = req.params;
-            const { usuario_idusuario, nombre, telefono, ubicacion} = req.body;
+            const { usuario_idusuario, nombre, telefono, rango} = req.body;
   
             try {
                 let query = 'UPDATE cliente SET ';
@@ -83,9 +83,9 @@ module.exports = (connection) => {
                     params.push(telefono);
                 }
   
-                if (ubicacion) {
-                    updates.push('ubicacion = ?');
-                    params.push(ubicacion);
+                if (rango) {
+                    updates.push('rango = ?');
+                    params.push(rango);
                 }
   
                 if (updates.length === 0) {
