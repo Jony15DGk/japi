@@ -127,6 +127,73 @@ module.exports = (connection) => {
                 console.error('Error:', error);
                 res.status(500).json({ message: 'Error' });
             }
-        }
+        },actualizarUsuarioYCliente: async (req, res) => {
+            const { idCliente } = req.params;
+            const { usuarioCampos, clienteCampos } = req.body;
+          
+            try {
+              const [usuarioRow] = await connection.promise().query(
+                'SELECT usuario_idusuario FROM cliente WHERE idcliente = ?',
+                [idCliente]
+              );
+          
+              if (usuarioRow.length === 0) {
+                return res.status(404).json({ message: 'Cliente no encontrado' });
+              }
+          
+              const idUsuario = usuarioRow[0].usuario_idusuario;
+          
+              if (usuarioCampos && Object.keys(usuarioCampos).length > 0) {
+                let usuarioQuery = 'UPDATE usuario SET ';
+                const usuarioUpdates = [];
+                const usuarioParams = [];
+          
+                for (const campo in usuarioCampos) {
+                  if (campo && usuarioCampos[campo] !== undefined) {
+                    usuarioUpdates.push(`${campo} = ?`);
+                    usuarioParams.push(usuarioCampos[campo]);
+                  }
+                }
+          
+                usuarioQuery += usuarioUpdates.join(', ') + ' WHERE idusuario = ?';
+                usuarioParams.push(idUsuario);
+          
+                const [usuarioResult] = await connection.promise().query(usuarioQuery, usuarioParams);
+          
+                if (usuarioResult.affectedRows === 0) {
+                  return res.status(404).json({ message: 'Usuario no encontrado' });
+                }
+              }
+          
+              if (clienteCampos && Object.keys(clienteCampos).length > 0) {
+                let clienteQuery = 'UPDATE cliente SET ';
+                const clienteUpdates = [];
+                const clienteParams = [];
+          
+                for (const campo in clienteCampos) {
+                  if (campo && clienteCampos[campo] !== undefined) {
+                    clienteUpdates.push(`${campo} = ?`);
+                    clienteParams.push(clienteCampos[campo]);
+                  }
+                }
+          
+                clienteQuery += clienteUpdates.join(', ') + ' WHERE idcliente = ?';
+                clienteParams.push(idCliente);
+          
+                const [clienteResult] = await connection.promise().query(clienteQuery, clienteParams);
+          
+                if (clienteResult.affectedRows === 0) {
+                  return res.status(404).json({ message: 'Cliente no encontrado' });
+                }
+              }
+          
+              res.status(200).json({ message: 'Usuario y Cliente actualizados exitosamente' });
+            } catch (error) {
+              console.error('Error:', error);
+              res.status(500).json({ message: 'Error al actualizar las entidades' });
+            }
+          }
+          
+          
     };
   };

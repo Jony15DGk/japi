@@ -10,6 +10,7 @@ module.exports = (connection) => {
   router.get('/cliente', authenticateToken(['Administrador']), controller.consultar);
   router.get('/cliente/:id', controller.consultarId);
   router.patch('/cliente/:id', controller.actualizarCliente);
+  router.patch('/clienteyusuario/:id', controller.actualizarUsuarioYCliente);
   router.delete('/cliente/:id',authenticateToken(['Administrador']), controller.eliminarCliente);
 
   return router;

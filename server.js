@@ -19,6 +19,7 @@ const tarjetaRoutes = require('./src/routes/tarjeta');
 const listadecategoriaRoutes = require('./src/routes/listadecategoria');
 const matrizRoutes = require('./src/routes/matriz');
 const uploadRoutes = require('./src/routes/upload');
+const favoritoRoutes = require('./src/routes/favorito');
 const app = express();
 const port = process.env.PORT || 8080;
 const cors = require('cors');
@@ -69,10 +70,10 @@ app.use('/api', tarjetaRoutes(pool));
 app.use('/api', listadecategoriaRoutes(pool));
 app.use('/api', matrizRoutes(pool));
 app.use('/api', uploadRoutes(pool));
+app.use('/api', favoritoRoutes(pool));
+
 
 
 app.listen(port, () => {
   console.log(`Servidor ejecutándose en el puerto: ${port}`);
 });
-
-//cambios para matriz
