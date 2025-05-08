@@ -1,5 +1,6 @@
 const { getToken, getTokenData, decodeTokenSinVerificar } = require('../config/jwt.config');
 const { getTemplate, sendEmail, getPasswordResetTemplate } = require('../config/mail.config');
+const { generateCode } = require('../utils/generateCode');
 const authenticateToken = require('../middleware/auth');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
@@ -822,8 +823,6 @@ module.exports = (connection) => {
         console.error('Error al actualizar la contraseña:', error);
         res.status(500).json({ message: 'Error en el servidor' });
       }
-    }, generateCode :() => {
-      return Math.floor(100000 + Math.random() * 900000).toString(); 
     },
     
     resetPasswordRequestWithCode : async (req, res) => {
