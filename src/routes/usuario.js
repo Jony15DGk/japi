@@ -10,6 +10,8 @@ module.exports = (connection) => {
 
   router.post('/reset-password', controller.resetPassword); 
   router.post('/resetpassword-request', controller.resetPasswordRequest); 
+  router.post('/reset-password-code', controller.resetPasswordWithCode); 
+  router.post('/resetpassword-request-code', controller.resetPasswordRequestWithCode); 
   router.post('/administrador', controller.administrador); 
   router.post('/usuario', controller.usuario); 
   router.post('/vendedor', controller.vendedor);

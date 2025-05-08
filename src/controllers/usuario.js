@@ -754,7 +754,7 @@ module.exports = (connection) => {
     
       try {
         const [users] = await connection.promise().query(
-          'SELECT idusuario, nombre, estatus FROM usuario WHERE email = ?', 
+          'SELECT u.idusuario, c.nombre, u.estatus FROM usuario as u inner join cliente as c on u.idusuario=c.usuario_idusuario  WHERE email = ?', 
           [email]
         );
     
@@ -822,7 +822,75 @@ module.exports = (connection) => {
         console.error('Error al actualizar la contraseña:', error);
         res.status(500).json({ message: 'Error en el servidor' });
       }
+    }, generateCode :() => {
+      return Math.floor(100000 + Math.random() * 900000).toString(); 
+    },
+    
+    resetPasswordRequestWithCode : async (req, res) => {
+      const { email } = req.body;
+    
+      try {
+        const [users] = await connection.promise().query(
+          'SSELECT u.idusuario, c.nombre, u.estatus FROM usuario as u inner join cliente as c on u.idusuario=c.usuario_idusuario  WHERE email = ?', 
+          [email]
+        );
+    
+        if (users.length === 0) {
+          return res.status(404).json({ success: false, message: 'Correo no encontrado' });
+        }
+    
+        if (users[0].estatus !== 1) {
+          return res.status(400).json({ success: false, message: 'Correo no verificado' });
+        }
+    
+        const code = generateCode();
+        const expires = new Date(Date.now() + 10 * 60 * 1000);
+    
+        await connection.promise().query(
+          'INSERT INTO tokenpassword (usuario_idusuario, token, fechaexpiracion) VALUES (?, ?, ?)',
+          [users[0].idusuario, code, expires]
+        );
+    
+        const emailTemplate = `<h2>Hola ${users[0].nombre},</h2><p>Tu código para cambiar la contraseña es <strong>${code}</strong></p><p>Este código expira en 10 minutos.</p>`;
+        await sendEmail(email, 'Código de restablecimiento de contraseña', emailTemplate);
+    
+        res.json({ success: true, message: 'Código enviado' });
+    
+      } catch (error) {
+        console.error('Error al enviar código:', error);
+        res.status(500).json({ message: 'Error en el servidor' });
+      }
+    },resetPasswordWithCode : async (req, res) => {
+      const {code, newPassword } = req.body;
+    
+      try {
+        const [records] = await connection.promise().query(
+          'SELECT usuario_idusuario FROM tokenpassword` WHERE token = ? AND fechaexpiracion > NOW()',
+          [code]
+        );
+    
+        if (records.length === 0) {
+          return res.status(400).json({ success: false, message: 'Código inválido o expirado' });
+        }
+    
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+    
+        await connection.promise().query(
+          'UPDATE usuario SET password = ? WHERE idusuario = ?',
+          [hashedPassword, records[0].usuario_idusuario]
+        );
+    
+        await connection.promise().query('DELETE FROM tokenpassword` WHERE token = ?', [code]);
+    
+        res.json({ success: true, message: 'Contraseña actualizada correctamente' });
+    
+      } catch (error) {
+        console.error('Error al actualizar contraseña:', error);
+        res.status(500).json({ message: 'Error en el servidor' });
+      }
     }
+    
+    
 
   };
 };
