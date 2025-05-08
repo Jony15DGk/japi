@@ -835,11 +835,17 @@ module.exports = (connection) => {
         );
     
         if (users.length === 0) {
-          return res.status(404).json({ success: false, message: 'Correo no encontrado' });
+          return res.status(404).json({ success: false,
+            emailExists: false,
+            pending: false
+});
         }
     
         if (users[0].estatus !== 1) {
-          return res.status(400).json({ success: false, message: 'Correo no verificado' });
+          return res.status(400).json({ success: false,
+            emailExists: true,
+            pending: false
+});
         }
     
         const code = generateCode();
@@ -853,7 +859,10 @@ module.exports = (connection) => {
         const emailTemplate = `<h2>Hola ${users[0].nombre},</h2><p>Tu código para cambiar la contraseña es <strong>${code}</strong></p><p>Este código expira en 10 minutos.</p>`;
         await sendEmail(email, 'Código de restablecimiento de contraseña', emailTemplate);
     
-        res.json({ success: true, message: 'Código enviado' });
+        res.json({ success: true,
+          emailExists: true,
+          pending: true
+});
     
       } catch (error) {
         console.error('Error al enviar código:', error);
@@ -869,10 +878,13 @@ module.exports = (connection) => {
         );
     
         if (records.length === 0) {
-          return res.status(400).json({ success: false, message: 'Código inválido o expirado' });
+          return res.status(400).json({ success: false,
+            emailExists: true,
+            pending: true
+});
         }
     
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const hashedPassword = Buffer.from(newPassword, 'utf8');
     
         await connection.promise().query(
           'UPDATE usuario SET password = ? WHERE idusuario = ?',
@@ -884,7 +896,10 @@ module.exports = (connection) => {
           [code]
         );
     
-        res.json({ success: true, message: 'Contraseña actualizada correctamente' });
+        res.json({ success: true,
+          emailExists: true,
+          pending: false
+});
     
       } catch (error) {
         console.error('Error al actualizar contraseña:', error);
