@@ -831,7 +831,7 @@ module.exports = (connection) => {
     
       try {
         const [users] = await connection.promise().query(
-          'SSELECT u.idusuario, c.nombre, u.estatus FROM usuario as u inner join cliente as c on u.idusuario=c.usuario_idusuario  WHERE email = ?', 
+          'SELECT u.idusuario, c.nombre, u.estatus FROM usuario as u inner join cliente as c on u.idusuario=c.usuario_idusuario  WHERE email = ?', 
           [email]
         );
     
