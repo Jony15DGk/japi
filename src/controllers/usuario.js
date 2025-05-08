@@ -860,11 +860,11 @@ module.exports = (connection) => {
         res.status(500).json({ message: 'Error en el servidor' });
       }
     },resetPasswordWithCode : async (req, res) => {
-      const {code, newPassword } = req.body;
+      const { code, newPassword } = req.body;
     
       try {
         const [records] = await connection.promise().query(
-          'SELECT usuario_idusuario FROM tokenpassword` WHERE token = ? AND fechaexpiracion > NOW()',
+          'SELECT usuario_idusuario FROM tokenpassword WHERE token = ? AND fechaexpiracion > NOW()',
           [code]
         );
     
@@ -879,7 +879,10 @@ module.exports = (connection) => {
           [hashedPassword, records[0].usuario_idusuario]
         );
     
-        await connection.promise().query('DELETE FROM tokenpassword` WHERE token = ?', [code]);
+        await connection.promise().query(
+          'DELETE FROM tokenpassword WHERE token = ?',
+          [code]
+        );
     
         res.json({ success: true, message: 'Contraseña actualizada correctamente' });
     
@@ -888,6 +891,7 @@ module.exports = (connection) => {
         res.status(500).json({ message: 'Error en el servidor' });
       }
     }
+    
     
     
 
