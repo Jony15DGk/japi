@@ -137,6 +137,7 @@ module.exports = (connection) => {
         if (rows.length === 0) {
           return res.status(401).json({success: false, emailExists: false,  pending:false});
         }
+
     
         const user = rows[0];
         const storedPassword = user.password.toString('utf8').replace(/\x00/g, '');
@@ -151,6 +152,15 @@ module.exports = (connection) => {
             pending: user.estatus === 0 ? true : false 
           });
         }
+        if (fcmToken) {
+  
+  await connection.promise().query(
+    `INSERT INTO tokenfcm (usuario_idusuario, token, eliminado)
+     VALUES (?, ?, 0)
+     ON DUPLICATE KEY UPDATE token = VALUES(token), eliminado = 0`,
+    [user.idusuario, fcmToken]
+  );
+}
     
         const accessToken = jwt.sign(
           { idusuario: user.idusuario, email: user.email, rol_idrol: user.rol_idrol, nombrecliente: user.nombrecliente, rol: user.nombre },
@@ -239,7 +249,6 @@ module.exports = (connection) => {
       }
     
       try {
-        // Verificar si el refreshToken es válido y está activo
         const [rows] = await connection.promise().query(
           'SELECT usuario_idusuario FROM refreshtoken WHERE token = ? AND fechaexpiracion > NOW() AND eliminado = 0',
           [refreshToken]
@@ -294,31 +303,45 @@ module.exports = (connection) => {
     }
     ,
     logout: async (req, res) => {
-      console.log('Logout iniciado');
-      const { refreshToken } = req.body;
-      console.log('RefreshToken recibido:', refreshToken);
-      if (!refreshToken || refreshToken.trim() === '') {
-        console.log('RefreshToken inválido');
-        return res.status(400).json({ message: 'Refresh token inválido' });
-      }
-      try {
-        const [result] = await connection.promise().query(
-          'DELETE FROM refreshtoken WHERE token = ?',
-          [refreshToken]
-        );
-        console.log('Resultado de la consulta:', result);
-        if (result.affectedRows === 0) {
-          console.log('Refresh token no encontrado en la base de datos');
-          return res.status(404).json({ message: 'Refresh token no encontrado' });
-        }
-        console.log('Sesión cerrada exitosamente');
+  console.log('Logout iniciado');
+  const { refreshToken, fcmToken } = req.body;
+  console.log('RefreshToken recibido:', refreshToken);
+  
+  if (!refreshToken || refreshToken.trim() === '') {
+    console.log('RefreshToken inválido');
+    return res.status(400).json({ message: 'Refresh token inválido' });
+  }
 
-        return res.json({ exito: true });
-      } catch (error) {
-        console.error('Error al cerrar sesión:', error);
-        res.status(500).json({ message: 'Error en el servidor' });
-      }
-    }, superusuario: async (req, res) => {
+  try {
+    const [result] = await connection.promise().query(
+      'DELETE FROM refreshtoken WHERE token = ?',
+      [refreshToken]
+    );
+
+    console.log('Resultado de la consulta:', result);
+    if (result.affectedRows === 0) {
+      console.log('Refresh token no encontrado en la base de datos');
+      return res.status(404).json({ message: 'Refresh token no encontrado' });
+    }
+
+   
+    if (fcmToken && fcmToken.trim() !== '') {
+      await connection.promise().query(
+        `DELETE FROM tokenfcm WHERE token = ?`,
+        [fcmToken]
+      );
+      console.log('FCM token marcado como eliminado');
+    }
+
+    console.log('Sesión cerrada exitosamente');
+    return res.json({ exito: true });
+
+  } catch (error) {
+    console.error('Error al cerrar sesión:', error);
+    res.status(500).json({ message: 'Error en el servidor' });
+  }
+}
+, superusuario: async (req, res) => {
       const { email, password, idcreador } = req.body;
 
       try {
@@ -868,44 +891,51 @@ module.exports = (connection) => {
         console.error('Error al enviar código:', error);
         res.status(500).json({ message: 'Error en el servidor' });
       }
-    },resetPasswordWithCode : async (req, res) => {
-      const { code, newPassword } = req.body;
-    
-      try {
-        const [records] = await connection.promise().query(
-          'SELECT usuario_idusuario FROM tokenpassword WHERE token = ? AND fechaexpiracion > NOW()',
-          [code]
-        );
-    
-        if (records.length === 0) {
-          return res.status(400).json({ success: false,
-            emailExists: true,
-            pending: true
+    }, verifyCode : async (req, res) => {
+  const { code } = req.body;
+
+  try {
+    const [records] = await connection.promise().query(
+      'SELECT usuario_idusuario FROM password_reset WHERE token = ? AND fechaexpiracion > NOW()', 
+      [code]
+    );
+
+    if (records.length === 0) {
+      return res.status(400).json({ success: false,
+              emailExists: false,
+              pending: true
 });
-        }
-    
-        const hashedPassword = Buffer.from(newPassword, 'utf8');
-    
-        await connection.promise().query(
-          'UPDATE usuario SET password = ? WHERE idusuario = ?',
-          [hashedPassword, records[0].usuario_idusuario]
-        );
-    
-        await connection.promise().query(
-          'DELETE FROM tokenpassword WHERE token = ?',
-          [code]
-        );
-    
-        res.json({ success: true,
-          emailExists: true,
-          pending: false
-});
-    
-      } catch (error) {
-        console.error('Error al actualizar contraseña:', error);
-        res.status(500).json({ message: 'Error en el servidor' });
-      }
     }
+
+    res.json({ success: true, message: 'Código válido', usuarioId: records[0].usuario_idusuario });
+
+  } catch (error) {
+    console.error('Error al verificar código:', error);
+    res.status(500).json({ message: 'Error en el servidor' });
+  }
+}
+
+    ,resetPasswordWithVerifiedCode : async (req, res) => {
+  const { usuarioId, newPassword } = req.body;
+
+  try {
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await connection.promise().query(
+      'UPDATE usuario SET contraseña = ? WHERE idusuario = ?',
+      [hashedPassword, usuarioId]
+    );
+
+    await connection.promise().query('DELETE FROM password_reset WHERE usuario_idusuario = ?', [usuarioId]);
+
+    res.json({ success: true, message: 'Contraseña actualizada correctamente' });
+
+  } catch (error) {
+    console.error('Error al actualizar contraseña:', error);
+    res.status(500).json({ message: 'Error en el servidor' });
+  }
+}
+
     
     
     
