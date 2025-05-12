@@ -317,13 +317,7 @@ module.exports = (connection) => {
     }
 
    
-    if (fcmToken && fcmToken.trim() !== '') {
-      await connection.promise().query(
-        `DELETE FROM tokenfcm WHERE token = ?`,
-        [fcmToken]
-      );
-      console.log('FCM token marcado como eliminado');
-    }
+    
 
     console.log('Sesión cerrada exitosamente');
     return res.json({ exito: true });
