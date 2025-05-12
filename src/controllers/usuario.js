@@ -152,15 +152,7 @@ module.exports = (connection) => {
             pending: user.estatus === 0 ? true : false 
           });
         }
-        if (fcmToken) {
-  
-  await connection.promise().query(
-    `INSERT INTO tokenfcm (usuario_idusuario, token, eliminado)
-     VALUES (?, ?, 0)
-     ON DUPLICATE KEY UPDATE token = VALUES(token), eliminado = 0`,
-    [user.idusuario, fcmToken]
-  );
-}
+        
     
         const accessToken = jwt.sign(
           { idusuario: user.idusuario, email: user.email, rol_idrol: user.rol_idrol, nombrecliente: user.nombrecliente, rol: user.nombre },
