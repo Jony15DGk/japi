@@ -896,15 +896,18 @@ module.exports = (connection) => {
 
   try {
     const [records] = await connection.promise().query(
-      'SELECT usuario_idusuario FROM password_reset WHERE token = ? AND fechaexpiracion > NOW()', 
+      'SELECT usuario_idusuario FROM tokenpassword WHERE token = ? AND fechaexpiracion > NOW()', 
       [code]
     );
 
     if (records.length === 0) {
-      return res.status(400).json({ success: false, message: 'Código inválido o expirado' });
+      return res.status(400).json({ success: false,
+            emailExists: true,
+            pending: false});
     }
 
-    res.json({ success: true, message: 'Código válido', token: code });
+    res.json({ success: true, emailExists: true,
+            pending: false });
 
   } catch (error) {
     console.error('Error al verificar código:', error);
@@ -917,12 +920,13 @@ module.exports = (connection) => {
 
   try {
     const [records] = await connection.promise().query(
-      'SELECT usuario_idusuario FROM password_reset WHERE token = ? AND fechaexpiracion > NOW()', 
+      'SELECT usuario_idusuario FROM tokenpassword WHERE token = ? AND fechaexpiracion > NOW()', 
       [token]
     );
 
     if (records.length === 0) {
-      return res.status(400).json({ success: false, message: 'Token inválido o expirado' });
+      return res.status(400).json({ success: false, emailExists: true,
+            pending: true });
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -934,7 +938,8 @@ module.exports = (connection) => {
 
     await connection.promise().query('DELETE FROM password_reset WHERE token = ?', [token]);
 
-    res.json({ success: true, message: 'Contraseña actualizada correctamente' });
+    res.json({ success: true, emailExists: true,
+            pending: false });
 
   } catch (error) {
     console.error('Error al actualizar contraseña:', error);
