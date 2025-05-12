@@ -891,7 +891,7 @@ module.exports = (connection) => {
         console.error('Error al enviar código:', error);
         res.status(500).json({ message: 'Error en el servidor' });
       }
-    }, verifyCode : async (req, res) => {
+    },  verifyCode : async (req, res) => {
   const { code } = req.body;
 
   try {
@@ -901,32 +901,38 @@ module.exports = (connection) => {
     );
 
     if (records.length === 0) {
-      return res.status(400).json({ success: false,
-              emailExists: false,
-              pending: true
-});
+      return res.status(400).json({ success: false, message: 'Código inválido o expirado' });
     }
 
-    res.json({ success: true, message: 'Código válido', usuarioId: records[0].usuario_idusuario });
+    res.json({ success: true, message: 'Código válido', token: code });
 
   } catch (error) {
     console.error('Error al verificar código:', error);
     res.status(500).json({ message: 'Error en el servidor' });
   }
-}
+},
 
-    ,resetPasswordWithVerifiedCode : async (req, res) => {
-  const { usuarioId, newPassword } = req.body;
+  resetPasswordWithTokenCode : async (req, res) => {
+  const { token, newPassword } = req.body;
 
   try {
+    const [records] = await connection.promise().query(
+      'SELECT usuario_idusuario FROM password_reset WHERE token = ? AND fechaexpiracion > NOW()', 
+      [token]
+    );
+
+    if (records.length === 0) {
+      return res.status(400).json({ success: false, message: 'Token inválido o expirado' });
+    }
+
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     await connection.promise().query(
       'UPDATE usuario SET contraseña = ? WHERE idusuario = ?',
-      [hashedPassword, usuarioId]
+      [hashedPassword, records[0].usuario_idusuario]
     );
 
-    await connection.promise().query('DELETE FROM password_reset WHERE usuario_idusuario = ?', [usuarioId]);
+    await connection.promise().query('DELETE FROM password_reset WHERE token = ?', [token]);
 
     res.json({ success: true, message: 'Contraseña actualizada correctamente' });
 
@@ -935,6 +941,8 @@ module.exports = (connection) => {
     res.status(500).json({ message: 'Error en el servidor' });
   }
 }
+
+
 
     
     
