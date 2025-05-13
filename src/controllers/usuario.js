@@ -922,7 +922,7 @@ module.exports = (connection) => {
       [hashedPassword, records[0].usuario_idusuario]
     );
 
-    await connection.promise().query('DELETE FROM password_reset WHERE token = ?', [token]);
+    await connection.promise().query('DELETE FROM tokenpassword WHERE token = ?', [token]);
 
     res.json({ success: true, emailExists: true,
             pending: false });
