@@ -918,7 +918,7 @@ module.exports = (connection) => {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     await connection.promise().query(
-      'UPDATE usuario SET contraseña = ? WHERE idusuario = ?',
+      'UPDATE usuario SET password = ? WHERE idusuario = ?',
       [hashedPassword, records[0].usuario_idusuario]
     );
 
