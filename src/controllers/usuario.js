@@ -915,7 +915,7 @@ module.exports = (connection) => {
             pending: true });
     }
 
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const hashedPassword = Buffer.from(newPassword, 'utf8');
 
     await connection.promise().query(
       'UPDATE usuario SET password = ? WHERE idusuario = ?',
