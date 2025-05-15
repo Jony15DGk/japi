@@ -10,6 +10,8 @@ module.exports = (connection) => {
   router.get('/favorito/:id', controller.consultarId);
   router.patch('/favorito/:id', controller.actualizarFavorito);
   router.delete('/favorito/:id', controller.eliminarFavorito);
+  router.get('/favorito/usuario/:idusuario', controller.consultarPorUsuario);
+
 
  return router;
 };

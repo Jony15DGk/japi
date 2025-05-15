@@ -122,7 +122,63 @@ module.exports = (connection) => {
           console.error('Error:', error);
           res.status(500).json({ message: 'Error' });
         }
+      },consultarPorUsuario: async (req, res) => {
+  const { idusuario } = req.params;
+
+  try {
+    const [clientes] = await connection.promise().query(
+      'SELECT idcliente FROM cliente WHERE usuario_idusuario = ? AND eliminado = 0',
+      [idusuario]
+    );
+
+    if (clientes.length === 0) {
+      return res.status(404).json({ message: 'Cliente no encontrado para el usuario' });
+    }
+
+    const idcliente = clientes[0].idcliente;
+
+    const [favoritos] = await connection.promise().query(
+      'SELECT * FROM favorito WHERE cliente_idcliente = ? AND eliminado = 0',
+      [idcliente]
+    );
+
+    if (favoritos.length === 0) {
+      return res.status(200).json({ message: 'No hay favoritos', favoritos: [] });
+    }
+
+    const [tokens] = await connection.promise().query(
+      'SELECT token FROM tokenfcm WHERE usuario_idusuario = ? AND eliminado = 0',
+      [idusuario]
+    );
+
+    if (tokens.length > 0) {
+      const fcmToken = tokens[0].token;
+
+      const admin = require('../utils/fire-base'); 
+
+      const mensaje = {
+        notification: {
+          title: 'Consulta de Favoritos',
+          body: 'Has consultado tu lista de favoritos'
+        },
+        token: fcmToken
+      };
+
+      try {
+        await admin.messaging().send(mensaje);
+        console.log('Notificación enviada correctamente');
+      } catch (error) {
+        console.error('Error al enviar notificación:', error);
       }
+    }
+
+    res.status(200).json(favoritos);
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ message: 'Error en el servidor' });
+  }
+}
+
   
     };
   };
