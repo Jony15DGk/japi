@@ -123,6 +123,7 @@ module.exports = (connection) => {
           res.status(500).json({ message: 'Error' });
         }
       },consultarPorUsuario: async (req, res) => {
+        console.log('Params recibidos:', req.params);
   const { idusuario } = req.params;
 
   try {
