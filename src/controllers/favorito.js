@@ -124,8 +124,11 @@ module.exports = (connection) => {
         }
       },consultarPorUsuario: async (req, res) => {
         console.log('Params recibidos:', req.params);
-  const { idusuario } = req.params;
+const idusuario = parseInt(req.params.idusuario);
 
+if (isNaN(idusuario)) {
+  return res.status(400).json({ message: 'ID de usuario inválido' });
+}
   try {
     const [clientes] = await connection.promise().query(
       'SELECT idcliente FROM cliente WHERE usuario_idusuario = ? AND eliminado = 0',
