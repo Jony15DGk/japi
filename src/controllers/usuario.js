@@ -122,7 +122,7 @@ module.exports = (connection) => {
       }
     },
     login: async (req, res) => {
-      const { email, password } = req.body;
+      const { email, password,fcmToken } = req.body;
 
       try {
         const [rows] = await connection.promise().query(
