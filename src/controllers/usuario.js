@@ -122,9 +122,10 @@ module.exports = (connection) => {
       }
     },
     login: async (req, res) => {
-      const { email, password,fcmToken } = req.body;
-
+      const { email, password, fcmToken } = req.body || {};
       try {
+        console.log('Body recibido:', req.body);
+
         const [rows] = await connection.promise().query(
           `SELECT idusuario, cliente.nombre as nombrecliente, rol.nombre, rol_idrol, email, password, estatus 
            FROM usuario 
@@ -153,7 +154,7 @@ module.exports = (connection) => {
           });
         }
         if (fcmToken) {
-      
+
           await connection.promise().query(
             `INSERT INTO tokenfcm (usuario_idusuario, token, eliminado)
      VALUES (?, ?, 0)
@@ -324,13 +325,13 @@ module.exports = (connection) => {
           console.log('Refresh token no encontrado en la base de datos');
           return res.status(404).json({ message: 'Refresh token no encontrado' });
         }
-       if (fcmToken && fcmToken.trim() !== '') {
-      await connection.promise().query(
-        `UPDATE tokenfcm SET eliminado = 1 WHERE token = ?`,
-        [fcmToken]
-      );
-      console.log('FCM token marcado como eliminado');
-    }
+        if (fcmToken && fcmToken.trim() !== '') {
+          await connection.promise().query(
+            `UPDATE tokenfcm SET eliminado = 1 WHERE token = ?`,
+            [fcmToken]
+          );
+          console.log('FCM token marcado como eliminado');
+        }
 
 
 
