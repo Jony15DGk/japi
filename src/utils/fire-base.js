@@ -1,30 +1,23 @@
 const admin = require('firebase-admin');
+const path = require('path');
+const fs = require('fs');
 
 try {
-  // Verifica si ya hay una instancia inicializada
   if (!admin.apps.length) {
-    // Limpia el email de caracteres no deseados
-    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL.trim().replace(/^\s*[=\t]+/, '');
+    // Opción 1: Usar un archivo JSON local
+    const serviceAccountPath = path.join(__dirname, '../config/notificaciones-fbcm.json');
+    const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
     
-    // Asegúrate de que la clave privada tenga el formato correcto
-    let privateKey = process.env.FIREBASE_PRIVATE_KEY;
-    if (!privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
-      // Si la clave no tiene el formato correcto, intenta recuperarlo
-      privateKey = `-----BEGIN PRIVATE KEY-----\n${privateKey.replace(/[^A-Za-z0-9+/=]/g, '')}\n-----END PRIVATE KEY-----\n`;
-    }
+    // Opción 2: Si estás en un entorno como Railway donde puedes cargar el contenido del JSON como variable
+    // const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
     
     console.log('Inicializando Firebase con:', {
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: clientEmail,
-      privateKeyFormat: privateKey.substring(0, 27) + '...'
+      projectId: serviceAccount.project_id,
+      clientEmail: serviceAccount.client_email
     });
     
     admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: clientEmail,
-        privateKey: privateKey
-      })
+      credential: admin.credential.cert(serviceAccount)
     });
     console.log('Firebase inicializado correctamente');
   }
