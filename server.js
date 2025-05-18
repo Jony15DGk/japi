@@ -74,6 +74,8 @@ app.use('/api', favoritoRoutes(pool));
 
 
 
+
 app.listen(port, () => {
   console.log(`Servidor ejecutándose en el puerto: ${port}`);
+  console.log('Server time:', new Date().toISOString());
 });
