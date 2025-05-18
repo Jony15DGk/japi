@@ -1,5 +1,5 @@
 const admin = require('firebase-admin');
-const serviceAccount = require('../config/notificaciones-fbcm.json'); // ignorado por Git
+const serviceAccount = require('../config/notificaciones-fbcm.json'); 
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
