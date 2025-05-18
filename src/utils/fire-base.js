@@ -5,7 +5,7 @@ const fs = require('fs');
 try {
   if (!admin.apps.length) {
     // Opción 1: Usar un archivo JSON local
-    const serviceAccountPath = path.join(__dirname, 'src/config/notificaciones-fbcm.json');
+    const serviceAccountPath = path.join(__dirname, '../config/notificaciones-fbcm.json');
     const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
     
     // Opción 2: Si estás en un entorno como Railway donde puedes cargar el contenido del JSON como variable
