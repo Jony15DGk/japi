@@ -157,6 +157,17 @@ if (isNaN(idusuario)) {
 
     if (tokens.length > 0) {
       const fcmToken = tokens[0].token;
+      // Añade logs detallados
+  console.log('Token FCM encontrado:', {
+    userId: idusuario,
+    tokenLength: fcmToken ? fcmToken.length : 0,
+    tokenPreview: fcmToken ? `${fcmToken.substring(0, 15)}...${fcmToken.substring(fcmToken.length - 15, fcmToken.length)}` : 'No token'
+  });
+  
+  // Validación básica del token
+  if (!fcmToken || fcmToken.length < 100) {
+    console.warn('⚠️ El token FCM parece demasiado corto para ser válido. Los tokens FCM suelen tener más de 100 caracteres.');
+  }
 
       const admin = require('../utils/fire-base'); 
 
