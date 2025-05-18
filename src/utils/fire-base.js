@@ -2,6 +2,13 @@
 
 const admin = require('firebase-admin');
 
+console.log('Inicializando Firebase con:', {
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+  keyStart: process.env.FIREBASE_PRIVATE_KEY?.substring(0, 30) + '...',
+});
+
+
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert({
@@ -13,9 +20,7 @@ if (!admin.apps.length) {
 }
 
 
-console.log('EMAIL:', process.env.FIREBASE_CLIENT_EMAIL);
-console.log('PROJECT_ID:', process.env.FIREBASE_PROJECT_ID);
-console.log('PRIVATE_KEY:', process.env.FIREBASE_PRIVATE_KEY ? 'Cargada' : 'Vacía');
+
 
 
 module.exports = admin;
