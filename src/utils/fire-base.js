@@ -2,9 +2,8 @@ const admin = require('firebase-admin');
 
 // Para depuración, verifica cómo se están cargando las variables
 console.log('Inicializando Firebase con:', {
-  projectId: process.env.FIREBASE_PROJECT_ID,
   clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-  // Evita mostrar demasiado de la clave privada
+  projectId: process.env.FIREBASE_PROJECT_ID,
   privateKeyLength: process.env.FIREBASE_PRIVATE_KEY?.length,
 });
 
