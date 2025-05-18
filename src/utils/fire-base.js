@@ -4,12 +4,18 @@ const fs = require('fs');
 
 try {
   if (!admin.apps.length) {
-    // Opción 1: Usar un archivo JSON local
+    // Usar rutas relativas con __dirname
     const serviceAccountPath = path.join(__dirname, '../config/notificaciones-fbcm.json');
-    const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
+    console.log('Buscando archivo en:', serviceAccountPath);
     
-    // Opción 2: Si estás en un entorno como Railway donde puedes cargar el contenido del JSON como variable
-    // const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    // Verificar si el archivo existe
+    if (!fs.existsSync(serviceAccountPath)) {
+      console.error('Archivo de configuración no encontrado en:', serviceAccountPath);
+      console.log('Contenido del directorio:', fs.readdirSync(path.join(__dirname, '../config')));
+      throw new Error('Archivo de configuración no encontrado');
+    }
+    
+    const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
     
     console.log('Inicializando Firebase con:', {
       projectId: serviceAccount.project_id,
