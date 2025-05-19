@@ -168,8 +168,11 @@ if (isNaN(idusuario)) {
   if (!fcmToken || fcmToken.length < 100) {
     console.warn('⚠️ El token FCM parece demasiado corto para ser válido. Los tokens FCM suelen tener más de 100 caracteres.');
   }
+if (tokens.length > 0 && tokens[0].token && tokens[0].token.length > 50) {
+  const fcmToken = tokens[0].token;
+      console.log(`Intentando enviar notificación al usuario ${idusuario} con token: ${fcmToken.substring(0, 10)}...`);
 
-      const admin = require('../utils/fire-base'); 
+    const admin = require('../utils/fire-base'); 
 
       const mensaje = {
         notification: {
@@ -180,12 +183,25 @@ if (isNaN(idusuario)) {
       };
 
       try {
-        await admin.messaging().send(mensaje);
-        console.log('Notificación enviada correctamente');
+        const result = await admin.messaging().send(mensaje);
+        console.log('Notificación enviada correctamente:', result);
       } catch (error) {
-        console.error('Error al enviar notificación:', error);
+        if (error.code === 'messaging/invalid-argument' || error.code === 'messaging/registration-token-not-registered') {
+          console.log(`Token inválido para usuario ${idusuario}, marcando como eliminado...`);
+          // Marcar el token como eliminado si es inválido
+          await connection.promise().query(
+            'UPDATE tokenfcm SET eliminado = 1 WHERE usuario_idusuario = ? AND token = ?',
+            [idusuario, fcmToken]
+          );
+        } else {
+          console.error('Error al enviar notificación:', error);
+        }
       }
+    }else {
+      console.log(`No se encontró un token FCM válido para el usuario ${idusuario}`);
     }
+  }
+     
 
     res.status(200).json(favoritos);
   } catch (error) {
