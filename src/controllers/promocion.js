@@ -459,34 +459,30 @@ module.exports = (connection) => {
         },consultarPorRango: async (req, res) => {
             const { lat, lng, rango } = req.body;
             try {
-                const [promociones] = await connection.promise().query(
-                    `SELECT 
-                        p.idpromocion,
-                        p.empresa_idempresa,
-                        p.categoria_idcategoria,
-                        p.nombre AS promocion_nombre,
-                        p.descripcion AS promocion_descripcion,
-                        p.precio,
-                        p.vigenciainicio,
-                        p.vigenciafin,
-                        p.tipo,
-                        e.nombre AS empresa_nombre,
-                        e.descripcion AS empresa_descripcion
-                     FROM promocion AS p
-                     INNER JOIN empresa AS e ON p.empresa_idempresa = e.idempresa
-                    WHERE (
-    6371000 * acos(
-        cos(radians(?)) * cos(radians(ST_X(e.ubicacion))) * 
-        cos(radians(ST_Y(e.ubicacion)) - radians(?)) + 
-        sin(radians(?)) * sin(radians(ST_X(e.ubicacion)))
-    )
-) <= ? AND p.eliminado = 0`,
-[parseFloat(lat), parseFloat(lng), parseFloat(lat), rango]
-                );
-
-
-
-
+               const [promociones] = await connection.promise().query(
+    `SELECT
+        p.idpromocion,
+        p.empresa_idempresa,
+        p.categoria_idcategoria,
+        p.nombre AS promocion_nombre,
+        p.descripcion AS promocion_descripcion,
+        p.precio,
+        p.vigenciainicio,
+        p.vigenciafin,
+        p.tipo,
+        e.nombre AS empresa_nombre,
+        e.descripcion AS empresa_descripcion
+    FROM promocion AS p
+    INNER JOIN empresa AS e ON p.empresa_idempresa = e.idempresa
+    WHERE (
+        6371000 * acos(
+            cos(radians(?)) * cos(radians(ST_Y(e.ubicacion))) *
+            cos(radians(ST_X(e.ubicacion)) - radians(?)) +
+            sin(radians(?)) * sin(radians(ST_Y(e.ubicacion)))
+        )
+    ) <= ? AND p.eliminado = 0`,
+    [parseFloat(lat), parseFloat(lng), parseFloat(lat), rango]
+);
 
                 if (promociones.length === 0) {
                     return res.status(404).json({ message: 'No se encontraron promociones en el rango especificado' });
