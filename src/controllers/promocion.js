@@ -457,7 +457,7 @@ module.exports = (connection) => {
                 res.status(500).json({ message: 'Error al crear promociones generales' });
             }
         },consultarPorRango: async (req, res) => {
-    const { lat, lng, rango } = req.body;
+   const { lat, lng, rango } = req.query;
     try {
         const [promociones] = await connection.promise().query(
             `SELECT 
