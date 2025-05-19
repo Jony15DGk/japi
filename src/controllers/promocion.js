@@ -457,64 +457,54 @@ module.exports = (connection) => {
                 res.status(500).json({ message: 'Error al crear promociones generales' });
             }
         }, consultarPorRango: async (req, res) => {
-            const { lat, lng, rango } = req.body;
-            try {
-                const [promociones] = await connection.promise().query(
-                    `SELECT 
-                        p.idpromocion,
-                        p.empresa_idempresa,
-                        p.categoria_idcategoria,
-                        p.nombre AS promocion_nombre,
-                        p.descripcion AS promocion_descripcion,
-                        p.precio,
-                        p.vigenciainicio,
-                        p.vigenciafin,
-                        p.tipo,
-                        e.nombre AS empresa_nombre,
-                        e.descripcion AS empresa_descripcion
-                     FROM promocion AS p
-                     INNER JOIN empresa AS e ON p.empresa_idempresa = e.idempresa
-                    WHERE (
-    6371000 * acos(
-        cos(radians(?)) * cos(radians(ST_X(e.ubicacion))) * 
-        cos(radians(ST_Y(e.ubicacion)) - radians(?)) + 
-        sin(radians(?)) * sin(radians(ST_X(e.ubicacion)))
-    )
-) <= ? AND p.eliminado = 0`,
-[parseFloat(lat), parseFloat(lng), parseFloat(lat), rango]
-                );
+    let { lat, lng, rango } = req.body;
 
+    // Validar datos
+    if (!lat || !lng || isNaN(lat) || isNaN(lng) || isNaN(rango)) {
+        return res.status(400).json({ message: "Datos inválidos. Asegúrate de enviar latitud, longitud y rango correctamente." });
+    }
 
+    lat = parseFloat(lat);
+    lng = parseFloat(lng);
+    rango = parseFloat(rango);
 
+    try {
+        const [promociones] = await connection.promise().query(
+            `SELECT 
+                p.idpromocion,
+                p.empresa_idempresa,
+                p.categoria_idcategoria,
+                p.nombre AS promocion_nombre,
+                p.descripcion AS promocion_descripcion,
+                p.precio,
+                p.vigenciainicio,
+                p.vigenciafin,
+                p.tipo,
+                e.nombre AS empresa_nombre,
+                e.descripcion AS empresa_descripcion
+             FROM promocion AS p
+             INNER JOIN empresa AS e ON p.empresa_idempresa = e.idempresa
+            WHERE (
+                6371000 * acos(
+                    cos(radians(?)) * cos(radians(ST_X(e.ubicacion))) * 
+                    cos(radians(ST_Y(e.ubicacion)) - radians(?)) + 
+                    sin(radians(?)) * sin(radians(ST_X(e.ubicacion)))
+                )
+            ) <= ? AND p.eliminado = 0`,
+            [lat, lng, lat, rango]
+        );
 
-
-                if (promociones.length === 0) {
-                    return res.status(404).json({ message: 'No se encontraron promociones en el rango especificado' });
-                }
-
-                const promocionesConImagenes = await Promise.all(
-                    promociones.map(async (promocion) => {
-                        const [imagenes] = await connection.promise().query(
-                            'SELECT idimagen, url, public_id FROM imagen WHERE promocion_idpromocion = ?',
-                            [promocion.idpromocion]
-                        );
-                        return {
-                            ...promocion,
-                            imagenes: imagenes.map(img => ({
-                                id: img.idimagen,
-                                url: img.url,
-                                public_id: img.public_id
-                            }))
-                        };
-                    })
-                );
-
-                res.status(200).json(promocionesConImagenes);
-            } catch (error) {
-                console.error('Error al consultar promociones por rango:', error);
-                res.status(500).json({ message: 'Error al consultar promociones' });
-            }
+        if (promociones.length === 0) {
+            return res.status(404).json({ message: 'No se encontraron promociones en el rango especificado' });
         }
+
+        res.status(200).json(promociones);
+    } catch (error) {
+        console.error('Error al consultar promociones por rango:', error);
+        res.status(500).json({ message: 'Error al consultar promociones' });
+    }
+}
+
 
 
 
