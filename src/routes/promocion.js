@@ -13,7 +13,7 @@ module.exports = (connection) => {
     router.patch('/promocion/:id', controller.actualizarPromocion);
     router.delete('/promocion/:id', controller.eliminarPromocion);
     router.post('/promocionGeneral', upload.array('images', 4), controller.promocionGeneral);
-    router.get('/promocionRango', controller.consultarPorRango);
+    router.post('/promocionRango', controller.consultarPorRango);
 
     return router;
 };
