@@ -491,7 +491,7 @@ module.exports = (connection) => {
                     sin(radians(?)) * sin(radians(ST_X(e.ubicacion)))
                 )
             ) <= ? AND p.eliminado = 0`,
-            [lat, lng, lat, rango]
+            [lat, lng,  rango]
         );
 
         if (promociones.length === 0) {
