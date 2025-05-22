@@ -147,7 +147,7 @@ if (isNaN(idusuario)) {
     );
 
     if (favoritos.length === 0) {
-      return res.status(200).json({ message: 'No hay favoritos', favoritos: [] });
+      return res.status(200).json({  favoritos:[] });
     }
 
     const [tokens] = await connection.promise().query(
