@@ -142,7 +142,7 @@ if (isNaN(idusuario)) {
     const idcliente = clientes[0].idcliente;
 
     const [favoritos] = await connection.promise().query(
-      'SELECT * FROM favorito WHERE cliente_idcliente = ? AND eliminado = 0',
+      'SELECT idfavorito, nombre as Nombre, ubicacion as Ubicacion, cliente_idcliente, eliminado FROM favorito WHERE cliente_idcliente = ? AND eliminado = 0',
       [idcliente]
     );
 
@@ -157,14 +157,12 @@ if (isNaN(idusuario)) {
 
     if (tokens.length > 0) {
       const fcmToken = tokens[0].token;
-      // Añade logs detallados
   console.log('Token FCM encontrado:', {
     userId: idusuario,
     tokenLength: fcmToken ? fcmToken.length : 0,
     tokenPreview: fcmToken ? `${fcmToken.substring(0, 15)}...${fcmToken.substring(fcmToken.length - 15, fcmToken.length)}` : 'No token'
   });
   
-  // Validación básica del token
   if (!fcmToken || fcmToken.length < 100) {
     console.warn('⚠️ El token FCM parece demasiado corto para ser válido. Los tokens FCM suelen tener más de 100 caracteres.');
   }
@@ -188,7 +186,6 @@ if (tokens.length > 0 && tokens[0].token && tokens[0].token.length > 50) {
       } catch (error) {
         if (error.code === 'messaging/invalid-argument' || error.code === 'messaging/registration-token-not-registered') {
           console.log(`Token inválido para usuario ${idusuario}, marcando como eliminado...`);
-          // Marcar el token como eliminado si es inválido
           await connection.promise().query(
             'UPDATE tokenfcm SET eliminado = 1 WHERE usuario_idusuario = ? AND token = ?',
             [idusuario, fcmToken]
