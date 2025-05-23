@@ -2,7 +2,6 @@ const admin = require('firebase-admin');
 
 try {
   if (!admin.apps.length) {
-    // Usar la configuración desde la variable de entorno
     const serviceAccount = JSON.parse(process.env.FIREBASE_CONFIG);
     
     console.log('Inicializando Firebase con:', {

@@ -264,7 +264,7 @@ module.exports = (connection) => {
 
 
         const [userRows] = await connection.promise().query(
-          `SELECT idusuario, cliente.nombre AS nombrecliente, rol.nombre AS rol, rol_idrol, email, estatus
+          `SELECT idusuario,  cliente.idcliente, cliente.nombre AS nombrecliente, rol.nombre AS rol, rol_idrol, email, estatus
            FROM usuario
            INNER JOIN rol ON usuario.rol_idrol = rol.idrol
            INNER JOIN cliente ON cliente.usuario_idusuario = usuario.idusuario
@@ -280,7 +280,7 @@ module.exports = (connection) => {
 
 
         const accessToken = jwt.sign(
-          { idusuario: user.idusuario, email: user.email, rol_idrol: user.rol_idrol, nombrecliente: user.nombrecliente, rol: user.rol },
+          { idusuario: user.idusuario, idcliente: user.idcliente,email: user.email, rol_idrol: user.rol_idrol, nombrecliente: user.nombrecliente, rol: user.rol },
           process.env.ACCESS_TOKEN_SECRET,
           { expiresIn: '15m' }
         );
@@ -290,6 +290,7 @@ module.exports = (connection) => {
           accessToken,
           user: {
             idusuario: user.idusuario,
+            idcliente: user.idcliente,
             nombrecliente: user.nombrecliente,
             email: user.email,
             rol_idrol: user.rol_idrol,
