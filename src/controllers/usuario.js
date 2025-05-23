@@ -127,7 +127,7 @@ module.exports = (connection) => {
         console.log('Body recibido:', req.body);
 
         const [rows] = await connection.promise().query(
-          `SELECT idusuario, cliente.nombre as nombrecliente, rol.nombre, rol_idrol, email, password, estatus 
+          `SELECT idusuario, cliente.idcliente, cliente.nombre as nombrecliente, rol.nombre, rol_idrol, email, password, estatus 
            FROM usuario 
            INNER JOIN rol ON usuario.rol_idrol = rol.idrol 
            INNER JOIN cliente ON cliente.usuario_idusuario = usuario.idusuario 
@@ -165,13 +165,13 @@ module.exports = (connection) => {
 
 
         const accessToken = jwt.sign(
-          { idusuario: user.idusuario, email: user.email, rol_idrol: user.rol_idrol, nombrecliente: user.nombrecliente, rol: user.nombre },
+          { idusuario: user.idusuario, idcliente: user.idcliente,email: user.email, rol_idrol: user.rol_idrol, nombrecliente: user.nombrecliente, rol: user.nombre },
           process.env.ACCESS_TOKEN_SECRET,
           { expiresIn: '15m' }
         );
 
         const refreshToken = jwt.sign(
-          { idusuario: user.idusuario, email: user.email, rol_idrol: user.rol_idrol, nombrecliente: user.nombrecliente, rol: user.nombre },
+          { idusuario: user.idusuario,  idcliente: user.idcliente, email: user.email, rol_idrol: user.rol_idrol, nombrecliente: user.nombrecliente, rol: user.nombre },
           process.env.REFRESH_TOKEN_SECRET,
           { expiresIn: '7d' }
         );
@@ -189,6 +189,7 @@ module.exports = (connection) => {
           refreshToken,
           user: {
             idusuario: user.idusuario,
+             idcliente: user.idcliente,
             nombrecliente: user.nombrecliente,
             email: user.email,
             rol_idrol: user.rol_idrol,
